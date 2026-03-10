@@ -48,3 +48,51 @@ After creating chapter branches, update `README.md` on `main`:
    | {XX} | {Chapter Title} | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/{XX}-{chapter-name}-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/{XX}-{chapter-name}-finish) |
    ```
 3. Replace `{XX}` with the zero-padded chapter number, `{chapter-name}` with kebab-case name, and `{Chapter Title}` with the human-readable title
+
+## Chapter Branch README Template
+
+When creating or updating `README.md` on chapter branches (`-start` and `-finish`), use this structure:
+
+```md
+# Test Driven Development (TDD) with Node.js
+
+This repository contains the source code for the [Test Driven Development with Node.js](https://dalabs.academy/courses/test-driven-development-with-nodejs) course.
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (v22 or higher)
+- [Docker](https://www.docker.com/)
+- [PostgreSQL](https://www.postgresql.org/)
+
+## Start Branch
+
+\```bash
+git checkout {XX}-{chapter-name}-start
+\```
+
+## Finish Branch
+
+\```bash
+git checkout {XX}-{chapter-name}-finish
+\```
+
+## Lesson
+
+[View the lesson on dalabs.academy](<!-- dalabs:{XX}-{chapter-name} -->)
+
+## Running Tests
+
+\```bash
+{test command for this branch}
+\```
+
+> **Note:** {Appropriate note about test expectations for this branch/phase}
+
+## Contact
+
+If you have any questions, feedback, or just want to connect, feel free to reach out to me on LinkedIn:
+
+https://www.linkedin.com/in/mt26691/
+```
+
+Replace `{XX}`, `{chapter-name}`, `{test command}`, and `{note}` with the appropriate values for each branch.
