@@ -23,6 +23,14 @@ If you ever get stuck or want to compare your work, just checkout the **finish**
 
 The `main` branch contains the final, completed version of the entire course — the end result of everything we'll build together.
 
+## Running Tests
+
+```bash
+node --test hello.test.js
+```
+
+> **Note:** On this branch (Red phase), the test is expected to **fail** because the `hello` function has not been implemented yet.
+
 ## Contact
 
 If you have any questions, feedback, or just want to connect, feel free to reach out to me on LinkedIn:
