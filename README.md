@@ -23,6 +23,12 @@ If you ever get stuck or want to compare your work, just checkout the **finish**
 
 The `main` branch contains the final, completed version of the entire course — the end result of everything we'll build together.
 
+## Chapters
+
+| # | Chapter | Lesson | Branches |
+|---|---------|--------|----------|
+| 01 | What is TDD | [Lesson](<!-- dalabs:01-what-is-tdd -->) | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-finish) |
+
 ## Running Tests
 
 ```bash
