@@ -25,9 +25,9 @@ The `main` branch contains the final, completed version of the entire course —
 
 ## Chapters
 
-| # | Chapter | Lesson | Branches |
-|---|---------|--------|----------|
-| 01 | What is TDD | [Lesson](<!-- dalabs:01-what-is-tdd -->) | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-finish) |
+| # | Chapter | Branches |
+|---|---------|----------|
+| 01 | What is TDD | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-finish) |
 
 ## Contact
 
