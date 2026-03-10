@@ -2,6 +2,12 @@
 
 This repository contains the source code for the [Test Driven Development with Node.js](https://dalabs.academy/courses/test-driven-development-with-nodejs) course.
 
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (v22 or higher)
+- [Docker](https://www.docker.com/)
+- [PostgreSQL](https://www.postgresql.org/)
+
 ## Course Repository
 
 All of the source code for this course is available on GitHub:
