@@ -8,26 +8,21 @@ This repository contains the source code for the [Test Driven Development with N
 - [Docker](https://www.docker.com/)
 - [PostgreSQL](https://www.postgresql.org/)
 
-## Course Repository
+## Start Branch
 
-All of the source code for this course is available on GitHub:
+```bash
+git checkout 01-what-is-tdd-start
+```
 
-https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course
+## Finish Branch
 
-Each chapter has two branches — a **start** branch and a **finish** branch — so you can easily follow along or jump to any point in the course. The branch naming convention follows this pattern:
+```bash
+git checkout 01-what-is-tdd-finish
+```
 
-- `01-what-is-tdd-start` — the starting point for Chapter 1, before any changes are made.
-- `01-what-is-tdd-finish` — the completed state of Chapter 1, with all the code we wrote during that chapter.
+## Lesson
 
-If you ever get stuck or want to compare your work, just checkout the **finish** branch for that chapter. And if you want to skip ahead or start fresh from a specific chapter, checkout the corresponding **start** branch.
-
-The `main` branch contains the final, completed version of the entire course — the end result of everything we'll build together.
-
-## Chapters
-
-| # | Chapter | Branches |
-|---|---------|----------|
-| 01 | What is TDD | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-finish) |
+[View the lesson on dalabs.academy](<!-- dalabs:01-what-is-tdd -->)
 
 ## Running Tests
 
