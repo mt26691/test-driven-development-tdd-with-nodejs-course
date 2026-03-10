@@ -37,3 +37,15 @@ When entering plan mode, **always** ask the user:
    - **Chapter number** (zero-padded, e.g., `01`, `02`)
    - **Chapter name** (kebab-case, e.g., `what-is-tdd`)
 3. Create both `-start` and `-finish` branches as needed.
+
+## README Update Rules
+
+After creating chapter branches, update `README.md` on `main`:
+
+1. Add a new row to the **Chapters** table in `README.md`
+2. Use this row format:
+   ```
+   | {XX} | {Chapter Title} | [Lesson](<!-- dalabs:{XX}-{chapter-name} -->) | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/{XX}-{chapter-name}-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/{XX}-{chapter-name}-finish) |
+   ```
+3. Replace `{XX}` with the zero-padded chapter number, `{chapter-name}` with kebab-case name, and `{Chapter Title}` with the human-readable title
+4. The `<!-- dalabs:... -->` placeholder is for the author to replace with the actual lesson URL from dalabs.academy
