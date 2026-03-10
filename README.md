@@ -1,2 +1,24 @@
-# test-driven-development-tdd-with-nodejs-course
-Test Driven Development with Node.js
+# Test Driven Development (TDD) with Node.js
+
+This repository contains the source code for the [Test Driven Development with Node.js](https://dalabs.academy/courses/test-driven-development-with-nodejs) course.
+
+## Course Repository
+
+All of the source code for this course is available on GitHub:
+
+https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course
+
+Each chapter has two branches — a **start** branch and a **finish** branch — so you can easily follow along or jump to any point in the course. The branch naming convention follows this pattern:
+
+- `01-what-is-tdd-start` — the starting point for Chapter 1, before any changes are made.
+- `01-what-is-tdd-finish` — the completed state of Chapter 1, with all the code we wrote during that chapter.
+
+If you ever get stuck or want to compare your work, just checkout the **finish** branch for that chapter. And if you want to skip ahead or start fresh from a specific chapter, checkout the corresponding **start** branch.
+
+The `main` branch contains the final, completed version of the entire course — the end result of everything we'll build together.
+
+## Contact
+
+If you have any questions, feedback, or just want to connect, feel free to reach out to me on LinkedIn:
+
+https://www.linkedin.com/in/mt26691/
