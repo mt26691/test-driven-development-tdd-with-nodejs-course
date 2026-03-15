@@ -29,7 +29,7 @@ The `main` branch contains the final, completed version of the entire course —
 |---|---------|--------|----------|
 | 01 | Introduction | [View](https://dalabs.academy/courses/test-driven-development-with-nodejs/getting-started/introduction) | — |
 | 02 | What is TDD? Why Do We Need It | [View](https://dalabs.academy/courses/test-driven-development-with-nodejs/getting-started/what-is-tdd) | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/01-what-is-tdd-finish) |
-| 03 | Project Setup & Your First Failing Test | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/03-project-setup-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/03-project-setup-finish) |
+| 03 | Project Setup & Your First Failing Test | [View](https://dalabs.academy/courses/test-driven-development-with-nodejs/getting-started/project-setup) | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/03-project-setup-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/03-project-setup-finish) |
 
 ## Contact
 
