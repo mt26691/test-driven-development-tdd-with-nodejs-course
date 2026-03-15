@@ -22,7 +22,7 @@ git checkout 03-project-setup-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:03-project-setup -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/getting-started/project-setup)
 
 ## Running Tests
 
