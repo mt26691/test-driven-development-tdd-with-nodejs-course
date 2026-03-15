@@ -22,7 +22,7 @@ git checkout 01-what-is-tdd-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:01-what-is-tdd -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/getting-started/what-is-tdd)
 
 ## Running Tests
 
