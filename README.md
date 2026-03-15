@@ -31,7 +31,7 @@ npm install
 npm test
 ```
 
-> **Note:** On this branch (Red phase), the test should **fail** because the health check handler has not been implemented yet.
+> **Note:** On this branch (Green phase), all tests should **pass** because the health check handler has been implemented.
 
 ## Type Checking
 

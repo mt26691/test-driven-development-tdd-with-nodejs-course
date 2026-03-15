@@ -15,8 +15,7 @@ export const healthRoute: FastifyPluginAsync = async (app) => {
       },
     },
     handler: async () => {
-      // TODO: implement health check response
-      return {};
+      return { message: "hello" };
     },
   });
 };
