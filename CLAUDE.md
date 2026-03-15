@@ -7,6 +7,10 @@ This is the course repository for **Test Driven Development (TDD) with Node.js**
 ## Tech Stack
 
 - **Node.js** v22+
+- **TypeScript** 5.x (strict mode, `noEmit`)
+- **tsx** — TypeScript runtime (no build step)
+- **Fastify** 5.x
+- **Jest** 30.x + **ts-jest** — test framework
 - **Docker**
 - **PostgreSQL**
 

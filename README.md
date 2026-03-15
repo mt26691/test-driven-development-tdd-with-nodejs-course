@@ -11,26 +11,35 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 01-what-is-tdd-start
+git checkout 03-project-setup-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 01-what-is-tdd-finish
+git checkout 03-project-setup-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:01-what-is-tdd -->)
+[View the lesson on dalabs.academy](<!-- dalabs:03-project-setup -->)
 
 ## Running Tests
 
 ```bash
-node --test hello.test.js
+npm install
+npm test
 ```
 
-> **Note:** On this branch (Green phase), the test should **pass** because the `hello` function has been implemented.
+> **Note:** On this branch (Red phase), the test should **fail** because the health check handler has not been implemented yet.
+
+## Type Checking
+
+```bash
+npm run typecheck
+```
+
+> **Note:** Type checking should **pass** on this branch — the code is well-typed, the test just expects a response that hasn't been implemented yet.
 
 ## Contact
 
