@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 03-project-setup-start
+git checkout 05-shorten-url-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 03-project-setup-finish
+git checkout 05-shorten-url-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/getting-started/project-setup)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/shorten-a-url)
 
 ## Running Tests
 
@@ -31,7 +31,7 @@ npm install
 npm test
 ```
 
-> **Note:** On this branch (Green phase), all tests should **pass** because the health check handler has been implemented.
+> **Note:** On this branch (Red phase), the test should **fail** because the `POST /shorten` endpoint has not been implemented yet.
 
 ## Type Checking
 
@@ -39,7 +39,7 @@ npm test
 npm run typecheck
 ```
 
-> **Note:** Type checking should **pass** on this branch — the code is well-typed, the test just expects a response that hasn't been implemented yet.
+> **Note:** Type checking should **pass** on this branch — the code is well-typed, the test just expects a route that does not exist yet.
 
 ## Contact
 
