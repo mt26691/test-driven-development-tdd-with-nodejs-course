@@ -31,7 +31,7 @@ npm install
 npm test
 ```
 
-> **Note:** On this branch (Red phase), the test should **fail** because the `POST /shorten` endpoint has not been implemented yet.
+> **Note:** On this branch (Green phase), all tests should **pass** because the `POST /shorten` endpoint now returns a fake short code and short URL.
 
 ## Type Checking
 
@@ -39,7 +39,7 @@ npm test
 npm run typecheck
 ```
 
-> **Note:** Type checking should **pass** on this branch — the code is well-typed, the test just expects a route that does not exist yet.
+> **Note:** Type checking should **pass** on this branch — the route and response shape are fully typed.
 
 ## Contact
 

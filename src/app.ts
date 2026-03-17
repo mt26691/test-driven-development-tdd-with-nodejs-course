@@ -2,6 +2,7 @@ import Fastify, { FastifyInstance } from "fastify";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { healthRoute } from "./routes/health";
+import { shortenRoute } from "./routes/shorten";
 
 interface BuildAppOptions {
   logger?: boolean;
@@ -28,6 +29,7 @@ export const buildApp = async (
 
   // Register routes
   await app.register(healthRoute);
+  await app.register(shortenRoute);
 
   return app;
 };
