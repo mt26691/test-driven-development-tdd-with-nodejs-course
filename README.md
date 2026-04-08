@@ -32,7 +32,7 @@ npm install
 npm test
 ```
 
-> **Note:** On this branch (Red phase), some tests should **fail** because the `shortenUrl` service function and the updated shorten endpoint have not been implemented yet.
+> **Note:** On this branch (Green phase), all tests should **pass** because the `shortenUrl` service function is implemented and the shorten route now uses it to generate unique short codes.
 
 ## Type Checking
 
@@ -40,7 +40,7 @@ npm test
 npm run typecheck
 ```
 
-> **Note:** Type checking should **pass** on this branch — the code is well-typed, the tests just expect functionality that has not been implemented yet.
+> **Note:** Type checking should **pass** on this branch — the store, service, and route are fully typed.
 
 ## Contact
 

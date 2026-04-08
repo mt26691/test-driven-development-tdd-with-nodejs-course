@@ -1,4 +1,5 @@
 import { FastifyPluginAsync } from "fastify";
+import { shortenUrl } from "../services/url.service";
 
 interface ShortenRequestBody {
   url: string;
@@ -30,14 +31,14 @@ export const shortenRoute: FastifyPluginAsync = async (app) => {
       },
     },
     handler: async (request, reply) => {
-      const shortCode = "abc123";
+      const result = shortenUrl(request.body.url);
 
       reply.code(201);
 
       return {
-        shortCode,
-        url: request.body.url,
-        shortUrl: `http://localhost:3000/${shortCode}`,
+        shortCode: result.shortCode,
+        url: result.url,
+        shortUrl: result.shortUrl,
       };
     },
   });
