@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { buildApp } from "../src/app";
+import { urlStore } from "../src/store";
 
 describe("POST /shorten", () => {
   let app: FastifyInstance;
@@ -13,6 +14,10 @@ describe("POST /shorten", () => {
     await app.close();
   });
 
+  beforeEach(() => {
+    urlStore.clear();
+  });
+
   it("should return 201 with a short code and short URL", async () => {
     const url = "https://dalabs.academy/courses/test-driven-development-with-nodejs";
 
@@ -23,10 +28,29 @@ describe("POST /shorten", () => {
     });
 
     expect(response.statusCode).toBe(201);
-    expect(response.json()).toEqual({
-      shortCode: "abc123",
-      url,
-      shortUrl: "http://localhost:3000/abc123",
+
+    const body = response.json();
+    expect(body.shortCode).toEqual(expect.any(String));
+    expect(body.url).toBe(url);
+    expect(body.shortUrl).toBe(`http://localhost:3000/${body.shortCode}`);
+  });
+
+  it("should return different short codes for different URLs", async () => {
+    const response1 = await app.inject({
+      method: "POST",
+      url: "/shorten",
+      payload: { url: "https://example.com/first" },
     });
+
+    const response2 = await app.inject({
+      method: "POST",
+      url: "/shorten",
+      payload: { url: "https://example.com/second" },
+    });
+
+    const body1 = response1.json();
+    const body2 = response2.json();
+
+    expect(body1.shortCode).not.toBe(body2.shortCode);
   });
 });
