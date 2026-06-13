@@ -22,7 +22,7 @@ git checkout 19-collisions-and-locks-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:19-collisions-and-locks -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/hardening-and-edge-cases/collisions-and-advisory-locks)
 
 ## Running Tests
 
