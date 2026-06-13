@@ -12,13 +12,14 @@ interface ListQuerystring {
 
 interface ListRouteOptions {
   urlStore: UrlStore;
+  baseUrl: string;
 }
 
 export const listRoute: FastifyPluginAsync<ListRouteOptions> = async (
   app,
   opts
 ) => {
-  const { urlStore } = opts;
+  const { urlStore, baseUrl } = opts;
 
   app.get<{ Querystring: ListQuerystring }>("/urls", {
     schema: {
@@ -80,7 +81,7 @@ export const listRoute: FastifyPluginAsync<ListRouteOptions> = async (
           originalUrl: item.originalUrl,
           clicks: item.clicks,
           createdAt: item.createdAt.toISOString(),
-          shortUrl: `http://localhost:3000/${item.shortCode}`,
+          shortUrl: `${baseUrl}/${item.shortCode}`,
         })),
         page,
         limit,

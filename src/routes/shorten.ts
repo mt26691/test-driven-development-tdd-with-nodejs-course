@@ -9,6 +9,7 @@ interface ShortenRequestBody {
 
 interface ShortenRouteOptions {
   urlStore: UrlStore;
+  baseUrl: string;
   random?: RandomSource;
 }
 
@@ -16,7 +17,7 @@ export const shortenRoute: FastifyPluginAsync<ShortenRouteOptions> = async (
   app,
   opts
 ) => {
-  const { urlStore, random } = opts;
+  const { urlStore, baseUrl, random } = opts;
 
   app.post<{ Body: ShortenRequestBody }>("/shorten", {
     schema: {
@@ -78,7 +79,7 @@ export const shortenRoute: FastifyPluginAsync<ShortenRouteOptions> = async (
       return {
         shortCode,
         url,
-        shortUrl: `http://localhost:3000/${shortCode}`,
+        shortUrl: `${baseUrl}/${shortCode}`,
       };
     },
   });

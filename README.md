@@ -36,7 +36,7 @@ docker compose up -d --wait
 # Apply the migration to the DEV database (creates the `urls` table)
 npx prisma migrate deploy
 
-# Fast unit tests — no database required
+# Fast unit tests — no database required (stay green, Docker-free)
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
@@ -47,16 +47,33 @@ npm run test:integration
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Red** phase. A new unit suite, `__tests__/config.test.ts`,
-> describes a single typed, validated configuration module — `loadConfig(env)` — that
-> reads environment variables, validates them against a schema, applies defaults, and
-> returns a frozen, typed config object (or throws a clear error when a required var is
-> missing or malformed).
+> **Note:** This is the **Green** phase. Configuration is now centralized and
+> validated at startup.
 >
-> The module `src/config.ts` does not exist yet, so the config suite fails to load
-> (`Cannot find module '../src/config'`) and `npm run typecheck` reports the same missing
-> module. Every other suite stays green. The finish branch adds the module and refactors
-> the app to read configuration only through it.
+> **One typed, validated config module.** `src/config.ts` reads the environment,
+> validates it against a TypeBox schema compiled with **Ajv** (the same validation
+> stack Fastify already uses for route schemas — no new framework, zero extra
+> top-level dependencies), applies defaults, and returns a **frozen, typed**
+> object. `loadConfig(env = process.env)` takes the environment as an argument so
+> tests can pass a fixture without ever touching the real `process.env`.
+>
+> **Validated variables.** `DATABASE_URL` (required, must be a URI), `PORT`
+> (integer, default `3000`), `BASE_URL` (the public base used to build `shortUrl`,
+> default `http://localhost:3000`), and `NODE_ENV` (`development` | `test` |
+> `production`, default `development`).
+>
+> **Fail fast.** The server entry (`src/server.ts`) calls the config loader before
+> it starts listening. A missing or malformed variable throws a clear, multi-line
+> message naming every problem and the process exits non-zero — the service never
+> boots in a half-configured state.
+>
+> **Typed access everywhere.** The `shortUrl` returned by `/shorten`, `/urls`, and
+> `/urls/:code/stats` is now built from `config.BASE_URL` instead of a hardcoded
+> `http://localhost:3000`, so it is configurable per environment. `BASE_URL`
+> defaults to `http://localhost:3000`, so every existing test stays green.
+>
+> Unit suite (`npm test`, Docker-free): **14 suites / 78 tests**. Integration
+> suite (`npm run test:integration`, Docker): **10 suites / 28 tests**.
 
 ## Type Checking
 
@@ -64,8 +81,7 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **fails** on this branch — `src/config.ts` does not exist yet,
-> so the config test cannot resolve its import.
+> **Note:** Type checking **passes** on this branch.
 
 ## Contact
 

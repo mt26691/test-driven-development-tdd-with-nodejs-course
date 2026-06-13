@@ -8,13 +8,14 @@ interface StatsRouteParams {
 
 interface StatsRouteOptions {
   urlStore: UrlStore;
+  baseUrl: string;
 }
 
 export const statsRoute: FastifyPluginAsync<StatsRouteOptions> = async (
   app,
   opts
 ) => {
-  const { urlStore } = opts;
+  const { urlStore, baseUrl } = opts;
 
   app.get<{ Params: StatsRouteParams }>("/urls/:code/stats", {
     schema: {
@@ -61,7 +62,7 @@ export const statsRoute: FastifyPluginAsync<StatsRouteOptions> = async (
         originalUrl: record.originalUrl,
         clicks: record.clicks,
         createdAt: record.createdAt.toISOString(),
-        shortUrl: `http://localhost:3000/${record.shortCode}`,
+        shortUrl: `${baseUrl}/${record.shortCode}`,
       };
     },
   });

@@ -12,6 +12,7 @@ import { UrlStore } from "./services/url.service";
 import { PrismaUrlRepository } from "./services/prisma-url.repository";
 import { prisma } from "./db/prisma";
 import { RandomSource } from "./utils/short-code";
+import { DEFAULT_BASE_URL } from "./config";
 
 interface BuildAppOptions {
   logger?: boolean;
@@ -25,6 +26,10 @@ interface BuildAppOptions {
   // pass an in-memory `UrlService` so they run without a database; the
   // integration tests pass a `PrismaUrlRepository`. The route never knows which.
   urlStore?: UrlStore;
+  // The public base used to build the `shortUrl` in responses. Defaults to
+  // DEFAULT_BASE_URL so tests stay Docker-free (no config load); production
+  // passes the validated config.BASE_URL from the server entry point.
+  baseUrl?: string;
 }
 
 export const buildApp = async (
@@ -43,6 +48,7 @@ export const buildApp = async (
   // `opts.urlStore`. Both satisfy the same `UrlStore` interface, so the routes
   // never need to change — this is the chapter-6 seam paying off.
   const urlStore = opts.urlStore ?? new PrismaUrlRepository(prisma);
+  const baseUrl = opts.baseUrl ?? DEFAULT_BASE_URL;
 
   await app.register(swagger, {
     openapi: {
@@ -68,9 +74,9 @@ export const buildApp = async (
   // prefix and segment count, so the radix router never confuses it with the
   // bare `/:code`.)
   await app.register(healthRoute);
-  await app.register(shortenRoute, { urlStore, random: opts.random });
-  await app.register(listRoute, { urlStore });
-  await app.register(statsRoute, { urlStore });
+  await app.register(shortenRoute, { urlStore, baseUrl, random: opts.random });
+  await app.register(listRoute, { urlStore, baseUrl });
+  await app.register(statsRoute, { urlStore, baseUrl });
   // DELETE /urls/:code shares its path shape with the future bare catch-all only
   // by coincidence — it is a different HTTP method, so the radix router keys it
   // separately and there is no collision with the GET routes.
