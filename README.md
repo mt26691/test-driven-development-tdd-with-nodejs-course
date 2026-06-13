@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 15-list-urls-start
+git checkout 16-url-stats-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 15-list-urls-finish
+git checkout 16-url-stats-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/list-all-urls)
+[View the lesson on dalabs.academy](<!-- dalabs:16-url-stats -->)
 
 ## Running Tests
 
@@ -36,56 +36,32 @@ docker compose up -d --wait
 # Apply the migration to the DEV database (creates the `urls` table)
 npx prisma migrate deploy
 
-# Fast unit tests — no database required (stay green, Docker-free)
+# Fast unit tests — no database required
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and exercise the paginated list against the real DB
+# Jest globalSetup) and exercise the endpoints against the real DB
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. `GET /urls` returns a paginated list of
-> URLs, newest first.
+> **Note:** This is the **Red** phase. The new `stats.test.ts` suites (one unit,
+> one integration) describe `GET /urls/:code/stats` — the happy path that returns
+> `{ shortCode, originalUrl, clicks, createdAt, shortUrl }` for a known code, and
+> a `404` for an unknown one. The endpoint does not exist yet, so requests fall
+> through to the `/:code` catch-all and the happy-path assertions fail with `404`.
 >
-> **Response envelope.** The endpoint returns
-> `{ data: Url[], page, limit, total }`, locked with a Fastify response schema.
-> Each item exposes `shortCode`, `originalUrl`, `clicks`, `createdAt`, and a
-> derived `shortUrl`. `total` is the count of ALL rows so the client can compute
-> the page count.
+> Your task in this chapter is to add the endpoint: a new `findRecordByCode`
+> method on the chapter-6 `UrlStore` seam (implemented in both stores) and a thin
+> `statsRoute` registered before the `/:code` catch-all. Implement them and the
+> tests go green.
 >
-> **Limit/offset pagination.** `skip = (page - 1) * limit`, `take = limit`. We
-> chose limit/offset over cursor pagination because the UI is page-numbered and
-> the dataset is small — `?page=3` is trivial to express. Cursor pagination is
-> better for very large or real-time datasets (stable under inserts, no deep
-> `OFFSET` scan), but it cannot jump to an arbitrary page number, which we want
-> here.
->
-> **Stable ordering.** Rows come back `createdAt DESC, id DESC`. The `id`
-> tiebreaker makes ordering deterministic even when two rows share a timestamp,
-> so page boundaries never duplicate or drop a row.
->
-> **Param validation.** The querystring JSON schema sets `page` (default 1,
-> minimum 1) and `limit` (default 20, minimum 1, maximum 100). Out-of-range
-> values are rejected with a `400 { error, message }` before the handler runs.
->
-> **Route ordering.** `/urls` is a static path registered BEFORE the `/:code`
-> catch-all, so Fastify's radix router serves the list rather than treating
-> `urls` as a short code. A test asserts `GET /urls` returns the list (200, no
-> `Location` header), not a redirect or 404.
->
-> The list method lives behind the chapter-6 `UrlStore` seam: a new
-> `list({ page, limit })` returning `{ items, total }`, implemented with
-> `findMany`/`count` in `PrismaUrlRepository` and a sorted slice in the in-memory
-> `UrlService`. The route stays thin.
->
-> Unit suite (`npm test`, Docker-free): **8 suites / 47 tests** — a new
-> `list.test.ts` covers default page size, page boundaries, ordering, total
-> count, validation, and the route-ordering proof. Integration suite
-> (`npm run test:integration`, Docker): **7 suites / 17 tests** — a new
-> `list-urls.test.ts` proves real pagination and ordering against Postgres.
+> - **Unit** (`npm test`, Docker-free): the stats happy-path tests fail (`404`);
+>   every other suite stays green.
+> - **Integration** (`npm run test:integration`, Docker): the stats happy-path
+>   tests fail (`404`); every other suite stays green.
 
 ## Type Checking
 
@@ -93,7 +69,9 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch.
+> **Note:** Type checking **passes** on this branch — the tests only call the
+> HTTP endpoint and existing store methods, so the start branch compiles cleanly
+> even though the endpoint is not implemented yet.
 
 ## Contact
 
