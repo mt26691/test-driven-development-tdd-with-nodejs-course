@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { UrlStore } from "./url.service";
+import { ListUrlsParams, ListUrlsResult, UrlStore } from "./url.service";
 
 /**
  * Prisma-backed implementation of {@link UrlStore}.
@@ -71,5 +71,35 @@ export class PrismaUrlRepository implements UrlStore {
       where: { shortCode },
       data: { clicks: { increment: 1 } },
     });
+  }
+
+  /**
+   * Return one page of URLs, newest first, plus the total row count.
+   *
+   * Limit/offset pagination: `skip = (page - 1) * limit`, `take = limit`. The
+   * order is `createdAt` descending with `id` descending as the tiebreaker — two
+   * rows created in the same instant still order deterministically, so page
+   * boundaries never duplicate or drop a row. `findMany` and `count` run inside
+   * one `$transaction` so the page and the total come from the same snapshot.
+   */
+  async list({ page, limit }: ListUrlsParams): Promise<ListUrlsResult> {
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.url.findMany({
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.url.count(),
+    ]);
+
+    return {
+      items: rows.map((row) => ({
+        shortCode: row.shortCode,
+        originalUrl: row.originalUrl,
+        clicks: row.clicks,
+        createdAt: row.createdAt,
+      })),
+      total,
+    };
   }
 }

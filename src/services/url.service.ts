@@ -9,14 +9,50 @@
  * but a database is not — so the interface is async to accommodate any backend.
  *
  * `incrementClicks` is added in chapter 14 so the redirect can count every hit.
- * It is part of the same narrow contract: the route calls it after a successful
- * lookup, and each backend implements the increment in whatever way is correct
- * for it — atomically in SQL for the Prisma store, on a counter Map in memory.
+ * `list` is added in chapter 15 so the API can return a paginated list of URLs:
+ * each backend slices its own storage (skip/take + count in SQL for Prisma, a
+ * sorted slice for the in-memory Map) and returns the same `{ items, total }`
+ * shape, so the route never learns which store it is talking to.
  */
+
+/**
+ * A single stored URL, projected for the list endpoint.
+ *
+ * `findByCode` only ever needed the original URL string, but listing has to
+ * surface the whole record — so this richer shape carries everything an item in
+ * the list exposes.
+ */
+export interface UrlRecord {
+  shortCode: string;
+  originalUrl: string;
+  clicks: number;
+  createdAt: Date;
+}
+
+/**
+ * Pagination request for {@link UrlStore.list}: a 1-based page number and the
+ * page size. The route resolves the schema's defaults before calling, so both
+ * are always present here.
+ */
+export interface ListUrlsParams {
+  page: number;
+  limit: number;
+}
+
+/**
+ * One page of URLs plus the grand total, so the caller can compute how many
+ * pages exist. `total` is the count of ALL rows, not just the ones on this page.
+ */
+export interface ListUrlsResult {
+  items: UrlRecord[];
+  total: number;
+}
+
 export interface UrlStore {
   save(shortCode: string, url: string): Promise<void>;
   findByCode(shortCode: string): Promise<string | undefined>;
   incrementClicks(shortCode: string): Promise<void>;
+  list(params: ListUrlsParams): Promise<ListUrlsResult>;
 }
 
 /**
@@ -30,24 +66,43 @@ export interface UrlStore {
  * themselves are synchronous, so each one resolves immediately.
  */
 export class UrlService implements UrlStore {
-  private readonly urls = new Map<string, string>();
-  private readonly clicks = new Map<string, number>();
+  private readonly records = new Map<string, UrlRecord>();
+  private seq = 0;
 
   async save(shortCode: string, url: string): Promise<void> {
-    this.urls.set(shortCode, url);
-    this.clicks.set(shortCode, 0);
+    this.seq += 1;
+    this.records.set(shortCode, {
+      shortCode,
+      originalUrl: url,
+      clicks: 0,
+      // Offset the timestamp by an increasing sequence so two URLs saved in the
+      // same millisecond still order deterministically — newest first.
+      createdAt: new Date(Date.now() + this.seq),
+    });
   }
 
   async findByCode(shortCode: string): Promise<string | undefined> {
-    return this.urls.get(shortCode);
+    return this.records.get(shortCode)?.originalUrl;
   }
 
   async incrementClicks(shortCode: string): Promise<void> {
-    if (!this.urls.has(shortCode)) return;
-    this.clicks.set(shortCode, (this.clicks.get(shortCode) ?? 0) + 1);
+    const record = this.records.get(shortCode);
+    if (!record) return;
+    record.clicks += 1;
   }
 
   async getClicks(shortCode: string): Promise<number | undefined> {
-    return this.clicks.get(shortCode);
+    return this.records.get(shortCode)?.clicks;
+  }
+
+  async list({ page, limit }: ListUrlsParams): Promise<ListUrlsResult> {
+    const sorted = [...this.records.values()].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+
+    const offset = (page - 1) * limit;
+    const items = sorted.slice(offset, offset + limit);
+
+    return { items, total: sorted.length };
   }
 }
