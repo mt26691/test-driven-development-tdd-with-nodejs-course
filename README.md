@@ -22,7 +22,7 @@ git checkout 20-config-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:20-config -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/production-readiness/configuration-and-env-validation)
 
 ## Running Tests
 
