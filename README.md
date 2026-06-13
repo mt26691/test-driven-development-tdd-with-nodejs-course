@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 16-url-stats-start
+git checkout 17-delete-url-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 16-url-stats-finish
+git checkout 17-delete-url-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/url-stats)
+[View the lesson on dalabs.academy](<!-- dalabs:17-delete-url -->)
 
 ## Running Tests
 
@@ -40,44 +40,47 @@ npx prisma migrate deploy
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and exercise the stats endpoint against the real DB
+# Jest globalSetup) and confirm the row is really gone in the real DB
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. `GET /urls/:code/stats` returns the
-> metadata and click stats for a single short code.
+> **Note:** This is the **Green** phase. `DELETE /urls/:code` removes a single
+> short URL.
 >
-> **Response shape.** The endpoint returns
-> `{ shortCode, originalUrl, clicks, createdAt, shortUrl }`, locked with a
-> Fastify response schema. `createdAt` is serialized as an ISO 8601 string
-> (`Date.prototype.toISOString()`), so the JSON shape is deterministic. An
-> unknown code returns `404 { error, message }`.
+> **Status codes.** Deleting an existing code returns `204 No Content` with an
+> empty body, and a later `GET /:code` or `GET /urls/:code/stats` then returns
+> `404`. Deleting a missing or already-deleted code returns `404 { error,
+> message }` — chosen over an idempotent `204` so the response is *informative*
+> (the client learns the resource was not there) and consistent with the 404s
+> the redirect and stats endpoints already return for unknown codes.
 >
-> **The seam.** Stats needs the *whole* record, not just the original URL, so a
-> new `findRecordByCode(shortCode)` is added to the chapter-6 `UrlStore`
-> interface — returning the full `UrlRecord` (`shortCode`, `originalUrl`,
-> `clicks`, `createdAt`) or `undefined` for an unknown code. It is implemented in
-> both `PrismaUrlRepository` (a projected `findUnique`) and the in-memory
-> `UrlService` (which already tracks the full record). The handler stays thin.
+> **The seam.** A new `delete(shortCode)` method is added to the chapter-6
+> `UrlStore` interface, returning a `boolean`: `true` when a row was actually
+> removed, `false` when the code did not exist. The thin handler maps `true → 204`
+> and `false → 404` with no extra lookup. It is implemented in both
+> `PrismaUrlRepository` (`deleteMany` + a `count > 0` check, which never throws on
+> a miss) and the in-memory `UrlService` (`Map.delete` already returns that
+> boolean).
 >
-> **Route ordering.** `/urls/:code/stats` has its own static prefix and segment
-> count, so Fastify's radix router never confuses it with the bare `/:code`
-> catch-all or the `/urls` list. It is registered before the catch-all alongside
-> the list route. A test asserts the path returns the stats object (200, no
-> `Location` header, not the list envelope), not a redirect or the list.
+> **Hard delete.** This is a *hard* delete — the row is gone. A *soft* delete
+> would add a `deletedAt` column and keep the history, but then every read
+> (redirect, list, stats) would have to filter it out. Hard delete keeps the
+> queries simple; soft delete is the right call when you need audit trails,
+> undo, or to preserve historical stats.
 >
-> **Richer stats later.** Fields like `lastAccessedAt`, referrers, or per-day
-> click rollups would need a richer data model (e.g. a separate click-events
-> table) — foreshadowing the table-partitioning bonus chapter.
+> **Confirming deletion.** The integration test does not trust the status code
+> alone: after the `204` it queries the database directly with
+> `prisma.url.findUnique` and asserts the row is `null`, proving the data is
+> actually gone.
 >
-> Unit suite (`npm test`, Docker-free): **9 suites / 52 tests** — a new
-> `stats.test.ts` covers the happy path, ISO date serialization, click counts,
-> the 404, and the route-ordering proof. Integration suite
-> (`npm run test:integration`, Docker): **8 suites / 20 tests** — a new
-> `stats.test.ts` proves stats against Postgres, including clicks after redirects.
+> Unit suite (`npm test`, Docker-free): **10 suites / 57 tests** — a new
+> `delete.test.ts` covers the 204 + empty body, the follow-up 404s, the
+> missing-code 404, the already-deleted 404, and that only the targeted code is
+> removed. Integration suite (`npm run test:integration`, Docker): **9 suites /
+> 23 tests** — a new `delete.test.ts` confirms the row is gone in Postgres.
 
 ## Type Checking
 

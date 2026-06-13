@@ -130,4 +130,22 @@ export class PrismaUrlRepository implements UrlStore {
       total,
     };
   }
+
+  /**
+   * Hard-delete the row for a short code, returning whether anything was removed.
+   *
+   * We use `deleteMany` rather than `delete` deliberately: `delete` throws
+   * (P2025) when no row matches, forcing a try/catch to tell "deleted" from
+   * "wasn't there". `deleteMany` never throws on a miss — it reports `count`,
+   * which is `1` for a real deletion and `0` for an unknown code. That maps
+   * cleanly onto the handler's 204-vs-404 decision, and `shortCode` is unique so
+   * the count is only ever 0 or 1.
+   */
+  async delete(shortCode: string): Promise<boolean> {
+    const { count } = await this.prisma.url.deleteMany({
+      where: { shortCode },
+    });
+
+    return count > 0;
+  }
 }

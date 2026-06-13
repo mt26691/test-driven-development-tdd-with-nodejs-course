@@ -18,6 +18,11 @@
  * `findByCode` only returns the original URL string, the stats endpoint needs
  * the whole record (clicks, createdAt, ...), so this method returns the full
  * `UrlRecord` — or `undefined` for an unknown code, matching `findByCode`.
+ *
+ * `delete` is added in chapter 17 for the delete endpoint. It returns a boolean
+ * — `true` if a row was actually removed, `false` if the code did not exist —
+ * so the thin handler can map a real deletion to 204 and a miss to 404 without
+ * a second lookup.
  */
 
 /**
@@ -59,6 +64,7 @@ export interface UrlStore {
   findRecordByCode(shortCode: string): Promise<UrlRecord | undefined>;
   incrementClicks(shortCode: string): Promise<void>;
   list(params: ListUrlsParams): Promise<ListUrlsResult>;
+  delete(shortCode: string): Promise<boolean>;
 }
 
 /**
@@ -114,5 +120,11 @@ export class UrlService implements UrlStore {
     const items = sorted.slice(offset, offset + limit);
 
     return { items, total: sorted.length };
+  }
+
+  // `Map.delete` already returns whether a key was present, which is exactly the
+  // true/false the handler needs to map to 204 vs 404 — no separate lookup.
+  async delete(shortCode: string): Promise<boolean> {
+    return this.records.delete(shortCode);
   }
 }

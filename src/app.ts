@@ -5,6 +5,7 @@ import { healthRoute } from "./routes/health";
 import { shortenRoute } from "./routes/shorten";
 import { listRoute } from "./routes/list";
 import { statsRoute } from "./routes/stats";
+import { deleteRoute } from "./routes/delete";
 import { redirectRoute } from "./routes/redirect";
 import { UrlStore } from "./services/url.service";
 import { PrismaUrlRepository } from "./services/prisma-url.repository";
@@ -83,6 +84,10 @@ export const buildApp = async (
   await app.register(shortenRoute, { urlStore, random: opts.random });
   await app.register(listRoute, { urlStore });
   await app.register(statsRoute, { urlStore });
+  // DELETE /urls/:code shares its path shape with the future bare catch-all only
+  // by coincidence — it is a different HTTP method, so the radix router keys it
+  // separately and there is no collision with the GET routes.
+  await app.register(deleteRoute, { urlStore });
   await app.register(redirectRoute, { urlStore });
 
   return app;
