@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 12-migrate-to-database-start
+git checkout 13-redirect-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 12-migrate-to-database-finish
+git checkout 13-redirect-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/adding-a-real-database/migrate-to-database)
+[View the lesson on dalabs.academy](<!-- dalabs:13-redirect -->)
 
 ## Running Tests
 
@@ -40,35 +40,39 @@ npx prisma migrate deploy
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and exercise the Prisma-backed store against the real DB
+# Jest globalSetup) and exercise the redirect against the real DB
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. We retire the in-memory `Map` from the
-> request path and serve from PostgreSQL. A new `PrismaUrlRepository`
-> (`src/services/prisma-url.repository.ts`) implements the **same `UrlStore`
-> interface** introduced in chapter 6 — `save(shortCode, url)` /
-> `findByCode(shortCode)` — mapping `url` to the `originalUrl` column and letting
-> the database fill `clicks` (0), `createdAt`, and the serial `id`. `buildApp`
-> now defaults to this Prisma store, so the real app persists to Postgres; tests
-> inject whichever backend they need.
+> **Note:** This is the **Green** phase. We add `GET /:code`, which looks up the
+> original URL by its short code and **HTTP-redirects** to it (302), or returns
+> **404** when the code is unknown.
 >
-> **The seam from chapter 6 pays off:** the route file
-> (`src/routes/shorten.ts`) changes by **just 2 lines** — adding `await` to the
-> two store calls, because `UrlStore` became async. Its logic, schema,
-> validation, and response are otherwise byte-for-byte identical.
+> **Why 302, not 301?** A `301 Moved Permanently` is cached hard by browsers and
+> proxies, so later requests would skip the server entirely — the click tracking
+> we add in chapter 14 would never run, and we could never change the target. A
+> `302 Found` is not cached by default, so every hit flows through the handler.
 >
-> Two integration tests drive the swap (Docker-required):
-> `prisma-url.repository.test.ts` exercises the repository directly, and
-> `shorten-persists.test.ts` POSTs `/shorten` through `buildApp` and confirms the
-> row actually lands in the `urls` table. Integration: **4 suites / 8 tests**.
+> **Route ordering / reserved paths:** `GET /:code` is a bare param route at the
+> root, so it could match `/health`, `/shorten`, and `/documentation`. We
+> register it **last** (`src/app.ts`), and Fastify's radix router prefers the
+> more specific static paths — so the catch-all only handles real short codes. A
+> unit test (`__tests__/redirect.test.ts`) proves `GET /health` still returns its
+> JSON, not a redirect or 404.
 >
-> The fast unit suite stays **green and Docker-free** (6 suites / 32 tests): the
-> route's unit tests inject the in-memory `UrlService`, so they never reach for a
-> database — run them with Postgres stopped and they still pass.
+> The lookup stays in the storage layer — the handler reuses the existing
+> `UrlStore.findByCode` (chapter 6), so the route is thin and the same code works
+> against the in-memory store (unit) and Prisma (integration).
+>
+> Unit suite (`npm test`, Docker-free): **7 suites / 35 tests** — three new
+> redirect cases (known code → 302 + `Location`; unknown code → 404, no
+> `Location`; `/health` still works). Integration suite
+> (`npm run test:integration`, Docker): **5 suites / 10 tests** — a new
+> `redirect-persists.test.ts` POSTs `/shorten`, then GETs `/:code` and confirms
+> the real DB round-trip redirects.
 
 ## Type Checking
 
