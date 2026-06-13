@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 07-unique-short-codes-start
+git checkout 08-url-validation-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 07-unique-short-codes-finish
+git checkout 08-url-validation-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/unique-short-codes)
+[View the lesson on dalabs.academy](<!-- dalabs:08-url-validation -->)
 
 ## Running Tests
 
@@ -31,7 +31,7 @@ npm install
 npm test
 ```
 
-> **Note:** On this branch (Green/Refactor phase), all tests **pass**. The pure base62 generator in `src/utils/short-code.ts` takes its randomness through an injected `random` source, so its unit tests are deterministic. The `POST /shorten` route now calls `generateUniqueShortCode` (regenerating on collision against the in-memory store) instead of returning the hardcoded `"abc123"`, and the route tests inject a deterministic RNG via `buildApp({ random })`.
+> **Note:** This is the **Red** phase. `__tests__/shorten.validation.test.ts` adds the unhappy-path tests for `POST /shorten` first, and they **fail** — the route currently accepts any string as a URL, so malformed input (`ftp://`, `javascript:`, `"not a url"`, an empty string, a non-string value, and an over-length URL) is wrongly accepted with `201` instead of being rejected with `400`. The pre-existing tests still pass; the validation logic arrives on the finish branch.
 
 ## Type Checking
 
@@ -39,7 +39,7 @@ npm test
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch — the generator, its `RandomSource` type, the route options, and the new `random` field on `BuildAppOptions` are all fully typed.
+> **Note:** Type checking **passes** on this branch — the new test file is fully typed (it uses `light-my-request`'s `Response` type for the inject helper). Only the runtime validation behaviour is missing, which is exactly what TDD's Red phase looks like.
 
 ## Contact
 
