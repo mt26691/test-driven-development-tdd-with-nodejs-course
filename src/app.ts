@@ -3,6 +3,7 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { healthRoute } from "./routes/health";
 import { shortenRoute } from "./routes/shorten";
+import { UrlService } from "./services/url.service";
 
 interface BuildAppOptions {
   logger?: boolean;
@@ -12,6 +13,11 @@ export const buildApp = async (
   opts: BuildAppOptions = {}
 ): Promise<FastifyInstance> => {
   const app = Fastify({ logger: opts.logger ?? true });
+
+  // Instantiate the store once and share it across every request handled by
+  // this app instance. Later chapters swap this for a database-backed store
+  // implementing the same interface — the routes never need to change.
+  const urlStore = new UrlService();
 
   await app.register(swagger, {
     openapi: {
@@ -29,7 +35,7 @@ export const buildApp = async (
 
   // Register routes
   await app.register(healthRoute);
-  await app.register(shortenRoute);
+  await app.register(shortenRoute, { urlStore });
 
   return app;
 };

@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 05-shorten-url-start
+git checkout 06-in-memory-storage-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 05-shorten-url-finish
+git checkout 06-in-memory-storage-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/shorten-a-url)
+[View the lesson on dalabs.academy](<!-- dalabs:06-in-memory-storage -->)
 
 ## Running Tests
 
@@ -31,7 +31,7 @@ npm install
 npm test
 ```
 
-> **Note:** On this branch (Green phase), all tests should **pass** because the `POST /shorten` endpoint now returns a fake short code and short URL.
+> **Note:** On this branch (Green/Refactor phase), all tests **pass**. The in-memory `UrlService` is implemented and wired into the `POST /shorten` route, so the new `url.service.test.ts` suite passes and the pre-existing `shorten` test still passes — the route contract is unchanged.
 
 ## Type Checking
 
@@ -39,7 +39,7 @@ npm test
 npm run typecheck
 ```
 
-> **Note:** Type checking should **pass** on this branch — the route and response shape are fully typed.
+> **Note:** Type checking **passes** on this branch — the service, its `UrlStore` interface, and the route options are all fully typed.
 
 ## Contact
 

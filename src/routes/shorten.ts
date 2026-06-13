@@ -1,10 +1,20 @@
 import { FastifyPluginAsync } from "fastify";
+import { UrlStore } from "../services/url.service";
 
 interface ShortenRequestBody {
   url: string;
 }
 
-export const shortenRoute: FastifyPluginAsync = async (app) => {
+interface ShortenRouteOptions {
+  urlStore: UrlStore;
+}
+
+export const shortenRoute: FastifyPluginAsync<ShortenRouteOptions> = async (
+  app,
+  opts
+) => {
+  const { urlStore } = opts;
+
   app.post<{ Body: ShortenRequestBody }>("/shorten", {
     schema: {
       description: "Create a shortened URL",
@@ -30,13 +40,16 @@ export const shortenRoute: FastifyPluginAsync = async (app) => {
       },
     },
     handler: async (request, reply) => {
+      const { url } = request.body;
       const shortCode = "abc123";
+
+      urlStore.save(shortCode, url);
 
       reply.code(201);
 
       return {
         shortCode,
-        url: request.body.url,
+        url,
         shortUrl: `http://localhost:3000/${shortCode}`,
       };
     },
