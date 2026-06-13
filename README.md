@@ -22,7 +22,7 @@ git checkout 11-prisma-and-schema-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:11-prisma-and-schema -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/adding-a-real-database/prisma-and-schema)
 
 ## Running Tests
 
