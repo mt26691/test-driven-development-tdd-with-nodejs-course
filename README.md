@@ -34,6 +34,7 @@ The `main` branch contains the final, completed version of the entire course —
 | 06 | In-Memory URL Storage | [View](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/in-memory-url-storage) | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/06-in-memory-storage-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/06-in-memory-storage-finish) |
 | 07 | Generating Unique Short Codes | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/07-unique-short-codes-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/07-unique-short-codes-finish) |
 | 08 | URL Validation & Edge Cases | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/08-url-validation-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/08-url-validation-finish) |
+| 09 | Setting Up PostgreSQL with Docker & Docker Compose | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/09-postgresql-docker-setup-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/09-postgresql-docker-setup-finish) |
 
 ## Contact
 
