@@ -22,7 +22,7 @@ git checkout 12-migrate-to-database-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:12-migrate-to-database -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/adding-a-real-database/migrate-to-database)
 
 ## Running Tests
 
