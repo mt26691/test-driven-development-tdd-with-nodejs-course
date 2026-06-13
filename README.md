@@ -22,7 +22,7 @@ git checkout 08-url-validation-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:08-url-validation -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/url-validation)
 
 ## Running Tests
 
