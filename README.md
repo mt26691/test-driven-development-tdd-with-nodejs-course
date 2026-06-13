@@ -22,7 +22,7 @@ git checkout 07-unique-short-codes-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:07-unique-short-codes -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/unique-short-codes)
 
 ## Running Tests
 
