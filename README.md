@@ -22,7 +22,7 @@ git checkout 17-delete-url-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:17-delete-url -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/delete-a-url)
 
 ## Running Tests
 
