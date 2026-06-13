@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 18-error-handling-start
+git checkout 19-collisions-and-locks-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 18-error-handling-finish
+git checkout 19-collisions-and-locks-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/hardening-and-edge-cases/centralized-error-handling)
+[View the lesson on dalabs.academy](<!-- dalabs:19-collisions-and-locks -->)
 
 ## Running Tests
 
@@ -47,34 +47,33 @@ npm run test:integration
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. Error handling is now centralized.
+> **Note:** This is the **Green** phase. Short-code generation is now safe under
+> collisions and concurrency.
 >
-> **Custom error classes.** `src/errors.ts` defines a shared `AppError` base
-> plus three subclasses — `NotFoundError` (404), `ValidationError` (400), and
-> `ConflictError` (409). Each carries its own `statusCode` and a human-readable
-> `error` label, so throwing one is enough to produce the right HTTP response.
+> **The race.** The old generator pre-checked `findByCode` before inserting. That
+> is a TOCTOU race: under concurrency two requests can both see a code as free,
+> then both insert it — one hits the database unique constraint (Prisma P2002),
+> surfacing as a 500. We drop the pre-check and make the `urls.short_code` unique
+> index the single source of truth.
 >
-> **One error handler.** `src/error-handler.ts` exports a single `errorHandler`
-> registered with `app.setErrorHandler`. It maps an `AppError` subclass to its
-> `statusCode` + `{ error, message }`; preserves the chapter-8 behavior of
-> mapping Fastify's schema-validation errors to `400 { error, message }`; and
-> maps anything unexpected to a generic `500 { error: "Internal Server Error",
-> message: "An unexpected error occurred." }`. The 500 path logs the real error
-> server-side via `request.log.error(error)` but never leaks the message or
-> stack to the client.
+> **Shipped strategy — retry on conflict.** `PrismaUrlRepository.saveWithUniqueCode`
+> draws a fresh code, tries to insert, and on P2002 retries with a new code up to
+> `DEFAULT_MAX_ATTEMPTS` (5). If every attempt collides it throws `ConflictError`
+> (the class seeded in chapter 18) → a clean 409. The route now calls
+> `urlStore.saveWithUniqueCode` instead of generate-then-save.
 >
-> **Refactor under green tests.** The redirect, stats, and delete handlers used
-> to build their own `404 { error, message }` bodies by hand. They now simply
-> `throw new NotFoundError(...)` and let the central handler format the
-> response. Because the resulting status code and body shape are identical, the
-> existing endpoint tests stayed green — the error handler is the seam that let
-> the refactor happen with no test changes.
+> **Alternative — advisory locks.** `saveWithAdvisoryLock` wraps generate+insert
+> in a transaction that takes `pg_advisory_xact_lock` on a global generation key,
+> so only one request generates at a time. It is shown as the pessimistic
+> alternative; the app ships the optimistic retry by default.
 >
-> Unit suite (`npm test`, Docker-free): **11 suites / 62 tests** — a new
-> `error-handling.test.ts` drives each error class through the handler and
-> asserts the status + body, including the unexpected-error 500 that leaks no
-> internals. Integration suite (`npm run test:integration`, Docker): **9 suites
-> / 23 tests** — unchanged; the refactored 404s behave exactly as before.
+> **Tested for real.** Unit tests drive the retry loop with the in-memory store
+> (which now models the unique constraint). Integration tests force a real
+> collision against Postgres and fire 50 concurrent `Promise.all` inserts,
+> asserting every code is distinct and no write is lost.
+>
+> Unit suite (`npm test`, Docker-free): **13 suites / 68 tests**. Integration
+> suite (`npm run test:integration`, Docker): **10 suites / 28 tests**.
 
 ## Type Checking
 

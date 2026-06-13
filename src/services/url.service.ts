@@ -1,3 +1,23 @@
+import { ConflictError } from "../errors";
+
+/**
+ * Default number of code-generation attempts before giving up with a
+ * ConflictError. Shared by every UrlStore so the retry budget is consistent.
+ */
+export const DEFAULT_MAX_ATTEMPTS = 5;
+
+/**
+ * Thrown by the in-memory store when an insert hits an existing code. It mirrors
+ * the database unique-constraint violation (Prisma P2002), so the retry loop is
+ * exercised the same way in unit tests as it is against a real database.
+ */
+export class UniqueCodeViolation extends Error {
+  constructor(readonly shortCode: string) {
+    super(`Short code already exists: ${shortCode}`);
+    this.name = "UniqueCodeViolation";
+  }
+}
+
 /**
  * Stores the mapping between a short code and its original URL.
  *
@@ -58,8 +78,19 @@ export interface ListUrlsResult {
   total: number;
 }
 
+/**
+ * A function that produces a candidate short code. The store calls it once per
+ * insert attempt, so a fresh candidate is drawn on every retry.
+ */
+export type GenerateCode = () => string;
+
 export interface UrlStore {
   save(shortCode: string, url: string): Promise<void>;
+  saveWithUniqueCode(
+    url: string,
+    generate: GenerateCode,
+    maxAttempts?: number
+  ): Promise<string>;
   findByCode(shortCode: string): Promise<string | undefined>;
   findRecordByCode(shortCode: string): Promise<UrlRecord | undefined>;
   incrementClicks(shortCode: string): Promise<void>;
@@ -82,6 +113,12 @@ export class UrlService implements UrlStore {
   private seq = 0;
 
   async save(shortCode: string, url: string): Promise<void> {
+    if (this.records.has(shortCode)) {
+      // Model the database unique constraint: a second insert of the same code
+      // is rejected, not silently overwritten.
+      throw new UniqueCodeViolation(shortCode);
+    }
+
     this.seq += 1;
     this.records.set(shortCode, {
       shortCode,
@@ -91,6 +128,27 @@ export class UrlService implements UrlStore {
       // same millisecond still order deterministically — newest first.
       createdAt: new Date(Date.now() + this.seq),
     });
+  }
+
+  async saveWithUniqueCode(
+    url: string,
+    generate: GenerateCode,
+    maxAttempts: number = DEFAULT_MAX_ATTEMPTS
+  ): Promise<string> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const shortCode = generate();
+      try {
+        await this.save(shortCode, url);
+        return shortCode;
+      } catch (error) {
+        if (error instanceof UniqueCodeViolation) continue;
+        throw error;
+      }
+    }
+
+    throw new ConflictError(
+      `Could not generate a unique short code after ${maxAttempts} attempts`
+    );
   }
 
   async findByCode(shortCode: string): Promise<string | undefined> {

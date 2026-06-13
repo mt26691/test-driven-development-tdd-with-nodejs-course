@@ -17,11 +17,16 @@ describe("UrlService", () => {
     expect(await service.findByCode("does-not-exist")).toBeUndefined();
   });
 
-  it("overwrites the url when the same short code is saved twice", async () => {
+  it("rejects a second save of an existing short code instead of overwriting", async () => {
     await service.save("abc123", "https://example.com");
-    await service.save("abc123", "https://dalabs.academy");
 
-    expect(await service.findByCode("abc123")).toBe("https://dalabs.academy");
+    // The in-memory store now models the database unique constraint: a duplicate
+    // code is rejected, not silently overwritten (which would be a lost write).
+    await expect(
+      service.save("abc123", "https://dalabs.academy")
+    ).rejects.toThrow();
+
+    expect(await service.findByCode("abc123")).toBe("https://example.com");
   });
 
   it("starts a saved url at zero clicks", async () => {

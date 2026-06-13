@@ -1,10 +1,28 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { ConflictError } from "../errors";
 import {
+  DEFAULT_MAX_ATTEMPTS,
+  GenerateCode,
   ListUrlsParams,
   ListUrlsResult,
   UrlRecord,
   UrlStore,
 } from "./url.service";
+
+/**
+ * Prisma raises P2002 when an insert violates a unique constraint — here, the
+ * `urls.short_code` unique index. That is the signal to retry with a fresh code.
+ */
+const isUniqueConstraintViolation = (error: unknown): boolean =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === "P2002";
+
+/**
+ * A fixed 64-bit key for the global short-code generation advisory lock. Any
+ * constant works as long as every caller uses the same one — the value just
+ * names the lock inside Postgres.
+ */
+const GENERATION_LOCK_KEY = 4_815_162_342;
 
 /**
  * Prisma-backed implementation of {@link UrlStore}.
@@ -43,6 +61,72 @@ export class PrismaUrlRepository implements UrlStore {
   async save(shortCode: string, url: string): Promise<void> {
     await this.prisma.url.create({
       data: { shortCode, originalUrl: url },
+    });
+  }
+
+  /**
+   * Save a URL under a freshly generated short code, retrying on collision.
+   *
+   * This is the SHIPPED strategy. The pre-check the old generator did
+   * (findByCode before insert) is a TOCTOU race: under concurrency two requests
+   * can both see a code as free and both insert it. So we drop the pre-check and
+   * let the database's `short_code` unique index be the single source of truth.
+   * Each attempt draws a fresh code and tries to insert; if Postgres rejects it
+   * with P2002 we generate another and try again, up to `maxAttempts`. Only if
+   * every attempt collides do we give up with a ConflictError (→ 409).
+   */
+  async saveWithUniqueCode(
+    url: string,
+    generate: GenerateCode,
+    maxAttempts: number = DEFAULT_MAX_ATTEMPTS
+  ): Promise<string> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const shortCode = generate();
+      try {
+        await this.prisma.url.create({
+          data: { shortCode, originalUrl: url },
+        });
+        return shortCode;
+      } catch (error) {
+        if (isUniqueConstraintViolation(error)) continue;
+        throw error;
+      }
+    }
+
+    throw new ConflictError(
+      `Could not generate a unique short code after ${maxAttempts} attempts`
+    );
+  }
+
+  /**
+   * Alternative strategy — serialize generation with a PostgreSQL advisory lock.
+   *
+   * Where the retry strategy is optimistic (let collisions happen, recover from
+   * them), this one is pessimistic: a transaction-scoped advisory lock keyed on
+   * a global generation key means only ONE request generates+inserts at a time,
+   * so two requests can never pick the same code concurrently in the first
+   * place. `pg_advisory_xact_lock` is released automatically when the
+   * transaction commits or rolls back, so there is no unlock to forget.
+   *
+   * It is shown as the documented alternative; the app wires up the retry
+   * strategy by default. See the comparison in this chapter's manifest.
+   */
+  async saveWithAdvisoryLock(
+    url: string,
+    generate: GenerateCode
+  ): Promise<string> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${GENERATION_LOCK_KEY})`;
+
+      let shortCode = generate();
+      while (
+        (await tx.url.findUnique({ where: { shortCode } })) !== null
+      ) {
+        shortCode = generate();
+      }
+
+      await tx.url.create({ data: { shortCode, originalUrl: url } });
+      return shortCode;
     });
   }
 
