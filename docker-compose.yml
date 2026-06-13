@@ -1,0 +1,48 @@
+# Docker Compose for local development.
+#
+# A single, version-pinned PostgreSQL instance backs both the dev database and
+# the test database. We use ONE instance with TWO databases (urlshortener and
+# urlshortener_test) rather than two separate Postgres services because it is
+# the simplest clean setup: one container, one port, half the memory, and it
+# mirrors how a CI service-container is usually configured. The test database
+# is created at first boot by the init script in ./docker/init — anything in
+# that directory runs automatically the first time the data volume is empty.
+#
+# Usage:
+#   docker compose up -d          # start Postgres in the background
+#   docker compose ps             # check health
+#   docker compose down           # stop and remove the container
+#   docker compose down -v        # ...and delete the data volume
+#
+# A fixed project name keeps the container/volume names stable and prevents
+# clashes with other chapters' stacks.
+name: url-shortener
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: url-shortener-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-urlshortener}
+    ports:
+      # Host port 5433 (not the default 5432) to avoid clashing with any other
+      # Postgres you may already run locally. Override with POSTGRES_PORT.
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Scripts here run once, on first boot, when the data volume is empty.
+      # We use it to create the dedicated test database alongside the dev one.
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # `docker compose up -d --wait` blocks until this reports healthy, so the
+      # test run never races the database during start-up.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-urlshortener}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:

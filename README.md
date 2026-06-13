@@ -28,15 +28,22 @@ git checkout 09-postgresql-docker-setup-finish
 
 ```bash
 npm install
+cp .env.example .env       # local dev/test connection config
+
+# Start PostgreSQL and wait until it is healthy
+docker compose up -d --wait
 
 # Fast unit tests — no database required
 npm test
 
-# Integration test — needs a real Postgres (FAILS on this branch)
+# Integration test — connects to the real test database
 npm run test:integration
+
+# When you are done, stop the database
+docker compose down        # add -v to also delete the data volume
 ```
 
-> **Note:** This is the **Red** phase. The fast unit tests (`npm test`) still pass — they never touch a database. The new integration test (`__tests__/integration/db.test.ts`) tries to `SELECT 1` against a real PostgreSQL, but on this branch it **fails to even compile**: there is no connection module (`src/db/pool`), the `pg` driver is not installed, and there is no `docker-compose.yml` to start a database. Expect `Cannot find module '../../src/db/pool'`. The finish branch adds Docker Compose, the `pg`-backed pool, and the env config that turns this red green.
+> **Note:** This is the **Green** phase. `docker compose up -d` stands up a pinned `postgres:16-alpine` instance hosting two databases — `urlshortener` (dev) and `urlshortener_test` (test, created by `docker/init/01-create-test-db.sql`). The new integration test (`__tests__/integration/db.test.ts`) connects via the `pg`-backed pool in `src/db/pool.ts`, reads `TEST_DATABASE_URL` from `.env`, and runs `SELECT 1` — proving real connectivity. A light `truncateAllTables` helper seeds the dedicated test-isolation chapter. The in-memory store is still the app's storage backend; the Prisma migration comes later. Unit tests stay fast and Docker-free.
 
 ## Type Checking
 
@@ -44,7 +51,7 @@ npm run test:integration
 npm run typecheck
 ```
 
-> **Note:** Type checking **fails** on this branch — the integration test imports `src/db/pool`, which does not exist yet (`error TS2307: Cannot find module '../../src/db/pool'`). The finish branch adds the module.
+> **Note:** Type checking **passes** on this branch — the `pg` `Pool`, the typed query result in the integration test, and the truncate helper are all fully typed (`@types/pg`).
 
 ## Contact
 

@@ -1,4 +1,5 @@
 import { pool } from "../../src/db/pool";
+import { truncateAllTables } from "./helpers/truncate";
 
 /**
  * Integration test: prove we can talk to a *real* PostgreSQL database.
@@ -21,10 +22,15 @@ describe("database connectivity", () => {
   });
 
   it("connects to Postgres and runs a trivial query", async () => {
-    const result = await pool.query<{ result: number }>(
-      "SELECT 1 as result"
-    );
+    const result = await pool.query<{ result: number }>("SELECT 1 as result");
 
     expect(result.rows[0].result).toBe(1);
+  });
+
+  it("cleans up the test database without error (cleanup seam for ch10)", async () => {
+    // There are no application tables yet, so this is effectively a no-op — but
+    // proving the seam runs against the real DB sets up the dedicated
+    // test-isolation chapter, where it moves into a beforeEach hook.
+    await expect(truncateAllTables()).resolves.toBeUndefined();
   });
 });
