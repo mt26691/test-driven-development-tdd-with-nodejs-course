@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 13-redirect-start
+git checkout 14-tracking-clicks-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 13-redirect-finish
+git checkout 14-tracking-clicks-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/redirect-to-original-url)
+[View the lesson on dalabs.academy](<!-- dalabs:14-tracking-clicks -->)
 
 ## Running Tests
 
@@ -40,39 +40,30 @@ npx prisma migrate deploy
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and exercise the redirect against the real DB
+# Jest globalSetup). The new click-tracking test FAILS here on purpose.
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. We add `GET /:code`, which looks up the
-> original URL by its short code and **HTTP-redirects** to it (302), or returns
-> **404** when the code is unknown.
+> **Note:** This is the **Red** phase. We add a failing integration test,
+> `__tests__/integration/click-tracking.test.ts`, that POSTs a URL, GETs
+> `/:code` five times, then reads `clicks` from the database and expects it to be
+> `5`. The redirect handler does not count hits yet, so `clicks` stays at its
+> default `0` → **Expected: 5, Received: 0**. With the Postgres container up that
+> red is honest behaviour, not a connectivity problem — the sibling
+> `redirect-persists.test.ts` still redirects against the same database.
 >
-> **Why 302, not 301?** A `301 Moved Permanently` is cached hard by browsers and
-> proxies, so later requests would skip the server entirely — the click tracking
-> we add in chapter 14 would never run, and we could never change the target. A
-> `302 Found` is not cached by default, so every hit flows through the handler.
+> **What's still green:** every other test — the unit suite (`npm test`) stays at
+> **7 suites / 35 tests** and `npm run typecheck` passes. Only the new
+> click-tracking integration test is red.
 >
-> **Route ordering / reserved paths:** `GET /:code` is a bare param route at the
-> root, so it could match `/health`, `/shorten`, and `/documentation`. We
-> register it **last** (`src/app.ts`), and Fastify's radix router prefers the
-> more specific static paths — so the catch-all only handles real short codes. A
-> unit test (`__tests__/redirect.test.ts`) proves `GET /health` still returns its
-> JSON, not a redirect or 404.
->
-> The lookup stays in the storage layer — the handler reuses the existing
-> `UrlStore.findByCode` (chapter 6), so the route is thin and the same code works
-> against the in-memory store (unit) and Prisma (integration).
->
-> Unit suite (`npm test`, Docker-free): **7 suites / 35 tests** — three new
-> redirect cases (known code → 302 + `Location`; unknown code → 404, no
-> `Location`; `/health` still works). Integration suite
-> (`npm run test:integration`, Docker): **5 suites / 10 tests** — a new
-> `redirect-persists.test.ts` POSTs `/shorten`, then GETs `/:code` and confirms
-> the real DB round-trip redirects.
+> In the **finish** branch we make it green: add an `incrementClicks(shortCode)`
+> method to the `UrlStore` seam, implement it as an **atomic** SQL increment in
+> the Prisma repository (`UPDATE urls SET clicks = clicks + 1`, i.e. Prisma's
+> `{ clicks: { increment: 1 } }`) and as a counter Map in the in-memory store,
+> then call it from the redirect handler after a successful lookup.
 
 ## Type Checking
 
@@ -80,7 +71,8 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch.
+> **Note:** Type checking **passes** on this branch — the red is behavioural (the
+> count stays 0), not a compile error.
 
 ## Contact
 
