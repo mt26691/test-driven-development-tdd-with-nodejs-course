@@ -22,7 +22,7 @@ git checkout 15-list-urls-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:15-list-urls -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/list-all-urls)
 
 ## Running Tests
 
