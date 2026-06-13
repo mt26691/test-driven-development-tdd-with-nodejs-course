@@ -13,6 +13,11 @@
  * each backend slices its own storage (skip/take + count in SQL for Prisma, a
  * sorted slice for the in-memory Map) and returns the same `{ items, total }`
  * shape, so the route never learns which store it is talking to.
+ *
+ * `findRecordByCode` is added in chapter 16 for the stats endpoint. Where
+ * `findByCode` only returns the original URL string, the stats endpoint needs
+ * the whole record (clicks, createdAt, ...), so this method returns the full
+ * `UrlRecord` — or `undefined` for an unknown code, matching `findByCode`.
  */
 
 /**
@@ -51,6 +56,7 @@ export interface ListUrlsResult {
 export interface UrlStore {
   save(shortCode: string, url: string): Promise<void>;
   findByCode(shortCode: string): Promise<string | undefined>;
+  findRecordByCode(shortCode: string): Promise<UrlRecord | undefined>;
   incrementClicks(shortCode: string): Promise<void>;
   list(params: ListUrlsParams): Promise<ListUrlsResult>;
 }
@@ -83,6 +89,10 @@ export class UrlService implements UrlStore {
 
   async findByCode(shortCode: string): Promise<string | undefined> {
     return this.records.get(shortCode)?.originalUrl;
+  }
+
+  async findRecordByCode(shortCode: string): Promise<UrlRecord | undefined> {
+    return this.records.get(shortCode);
   }
 
   async incrementClicks(shortCode: string): Promise<void> {

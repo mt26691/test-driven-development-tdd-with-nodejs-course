@@ -4,6 +4,7 @@ import swaggerUi from "@fastify/swagger-ui";
 import { healthRoute } from "./routes/health";
 import { shortenRoute } from "./routes/shorten";
 import { listRoute } from "./routes/list";
+import { statsRoute } from "./routes/stats";
 import { redirectRoute } from "./routes/redirect";
 import { UrlStore } from "./services/url.service";
 import { PrismaUrlRepository } from "./services/prisma-url.repository";
@@ -73,11 +74,15 @@ export const buildApp = async (
   // would match anything at the root — including /health, /shorten, /urls, and
   // /documentation. Registering it LAST lets Fastify's radix router prefer the
   // more specific static paths, so the catch-all only handles real short codes.
-  // In particular `/urls` is a static path that MUST be registered before the
-  // catch-all, or `GET /urls` would be read as a redirect for the code "urls".
+  // In particular `/urls` and `/urls/:code/stats` are more specific than the
+  // catch-all and MUST be registered before it, or `GET /urls` would be read as
+  // a redirect for the code "urls". (`/urls/:code/stats` has its own static
+  // prefix and segment count, so the radix router never confuses it with the
+  // bare `/:code`.)
   await app.register(healthRoute);
   await app.register(shortenRoute, { urlStore, random: opts.random });
   await app.register(listRoute, { urlStore });
+  await app.register(statsRoute, { urlStore });
   await app.register(redirectRoute, { urlStore });
 
   return app;

@@ -1,5 +1,10 @@
 import { PrismaClient } from "@prisma/client";
-import { ListUrlsParams, ListUrlsResult, UrlStore } from "./url.service";
+import {
+  ListUrlsParams,
+  ListUrlsResult,
+  UrlRecord,
+  UrlStore,
+} from "./url.service";
 
 /**
  * Prisma-backed implementation of {@link UrlStore}.
@@ -55,6 +60,29 @@ export class PrismaUrlRepository implements UrlStore {
     });
 
     return row?.originalUrl ?? undefined;
+  }
+
+  /**
+   * Look up the full record for a short code, for the stats endpoint.
+   *
+   * Where `findByCode` projects the row down to just `originalUrl`, the stats
+   * endpoint needs the whole record. We project the row to the `UrlRecord`
+   * shape the interface promises (dropping the internal `id`) and normalise the
+   * `null` from a miss to `undefined`, matching the in-memory store's contract.
+   */
+  async findRecordByCode(shortCode: string): Promise<UrlRecord | undefined> {
+    const row = await this.prisma.url.findUnique({
+      where: { shortCode },
+    });
+
+    if (!row) return undefined;
+
+    return {
+      shortCode: row.shortCode,
+      originalUrl: row.originalUrl,
+      clicks: row.clicks,
+      createdAt: row.createdAt,
+    };
   }
 
   /**
