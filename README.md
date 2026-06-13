@@ -32,6 +32,7 @@ The `main` branch contains the final, completed version of the entire course —
 | 03 | Project Setup & Your First Failing Test | [View](https://dalabs.academy/courses/test-driven-development-with-nodejs/getting-started/project-setup) | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/03-project-setup-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/03-project-setup-finish) |
 | 05 | Shorten a URL | [View](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/shorten-a-url) | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/05-shorten-url-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/05-shorten-url-finish) |
 | 06 | In-Memory URL Storage | [View](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/in-memory-url-storage) | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/06-in-memory-storage-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/06-in-memory-storage-finish) |
+| 07 | Generating Unique Short Codes | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/07-unique-short-codes-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/07-unique-short-codes-finish) |
 
 ## Contact
 
