@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 19-collisions-and-locks-start
+git checkout 20-config-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 19-collisions-and-locks-finish
+git checkout 20-config-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/hardening-and-edge-cases/collisions-and-advisory-locks)
+[View the lesson on dalabs.academy](<!-- dalabs:20-config -->)
 
 ## Running Tests
 
@@ -36,7 +36,7 @@ docker compose up -d --wait
 # Apply the migration to the DEV database (creates the `urls` table)
 npx prisma migrate deploy
 
-# Fast unit tests — no database required (stay green, Docker-free)
+# Fast unit tests — no database required
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
@@ -47,33 +47,16 @@ npm run test:integration
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. Short-code generation is now safe under
-> collisions and concurrency.
+> **Note:** This is the **Red** phase. A new unit suite, `__tests__/config.test.ts`,
+> describes a single typed, validated configuration module — `loadConfig(env)` — that
+> reads environment variables, validates them against a schema, applies defaults, and
+> returns a frozen, typed config object (or throws a clear error when a required var is
+> missing or malformed).
 >
-> **The race.** The old generator pre-checked `findByCode` before inserting. That
-> is a TOCTOU race: under concurrency two requests can both see a code as free,
-> then both insert it — one hits the database unique constraint (Prisma P2002),
-> surfacing as a 500. We drop the pre-check and make the `urls.short_code` unique
-> index the single source of truth.
->
-> **Shipped strategy — retry on conflict.** `PrismaUrlRepository.saveWithUniqueCode`
-> draws a fresh code, tries to insert, and on P2002 retries with a new code up to
-> `DEFAULT_MAX_ATTEMPTS` (5). If every attempt collides it throws `ConflictError`
-> (the class seeded in chapter 18) → a clean 409. The route now calls
-> `urlStore.saveWithUniqueCode` instead of generate-then-save.
->
-> **Alternative — advisory locks.** `saveWithAdvisoryLock` wraps generate+insert
-> in a transaction that takes `pg_advisory_xact_lock` on a global generation key,
-> so only one request generates at a time. It is shown as the pessimistic
-> alternative; the app ships the optimistic retry by default.
->
-> **Tested for real.** Unit tests drive the retry loop with the in-memory store
-> (which now models the unique constraint). Integration tests force a real
-> collision against Postgres and fire 50 concurrent `Promise.all` inserts,
-> asserting every code is distinct and no write is lost.
->
-> Unit suite (`npm test`, Docker-free): **13 suites / 68 tests**. Integration
-> suite (`npm run test:integration`, Docker): **10 suites / 28 tests**.
+> The module `src/config.ts` does not exist yet, so the config suite fails to load
+> (`Cannot find module '../src/config'`) and `npm run typecheck` reports the same missing
+> module. Every other suite stays green. The finish branch adds the module and refactors
+> the app to read configuration only through it.
 
 ## Type Checking
 
@@ -81,7 +64,8 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch.
+> **Note:** Type checking **fails** on this branch — `src/config.ts` does not exist yet,
+> so the config test cannot resolve its import.
 
 ## Contact
 
