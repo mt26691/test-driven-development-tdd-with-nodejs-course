@@ -42,6 +42,7 @@ The `main` branch contains the final, completed version of the entire course —
 | 14 | Tracking Clicks | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/14-tracking-clicks-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/14-tracking-clicks-finish) |
 | 15 | List All URLs (GET /urls) | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/15-list-urls-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/15-list-urls-finish) |
 | 16 | URL Stats (GET /urls/:code/stats) | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/16-url-stats-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/16-url-stats-finish) |
+| 17 | Delete a URL (DELETE /urls/:code) | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/17-delete-url-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/17-delete-url-finish) |
 
 ## Contact
 
