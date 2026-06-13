@@ -22,7 +22,7 @@ git checkout 18-error-handling-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:18-error-handling -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/hardening-and-edge-cases/centralized-error-handling)
 
 ## Running Tests
 
