@@ -6,6 +6,7 @@
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",
     "test": "jest --verbose",
+    "test:integration": "jest --config jest.integration.config.ts --verbose",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
