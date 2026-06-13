@@ -22,7 +22,7 @@ git checkout 13-redirect-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:13-redirect -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/redirect-to-original-url)
 
 ## Running Tests
 
