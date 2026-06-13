@@ -22,7 +22,7 @@ git checkout 06-in-memory-storage-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:06-in-memory-storage -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/in-memory-storage)
 
 ## Running Tests
 
