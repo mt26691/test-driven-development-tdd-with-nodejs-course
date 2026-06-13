@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 06-in-memory-storage-start
+git checkout 07-unique-short-codes-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 06-in-memory-storage-finish
+git checkout 07-unique-short-codes-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/in-memory-storage)
+[View the lesson on dalabs.academy](<!-- dalabs:07-unique-short-codes -->)
 
 ## Running Tests
 
@@ -31,7 +31,7 @@ npm install
 npm test
 ```
 
-> **Note:** On this branch (Green/Refactor phase), all tests **pass**. The in-memory `UrlService` is implemented and wired into the `POST /shorten` route, so the new `url.service.test.ts` suite passes and the pre-existing `shorten` test still passes — the route contract is unchanged.
+> **Note:** On this branch (Green/Refactor phase), all tests **pass**. The pure base62 generator in `src/utils/short-code.ts` takes its randomness through an injected `random` source, so its unit tests are deterministic. The `POST /shorten` route now calls `generateUniqueShortCode` (regenerating on collision against the in-memory store) instead of returning the hardcoded `"abc123"`, and the route tests inject a deterministic RNG via `buildApp({ random })`.
 
 ## Type Checking
 
@@ -39,7 +39,7 @@ npm test
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch — the service, its `UrlStore` interface, and the route options are all fully typed.
+> **Note:** Type checking **passes** on this branch — the generator, its `RandomSource` type, the route options, and the new `random` field on `BuildAppOptions` are all fully typed.
 
 ## Contact
 

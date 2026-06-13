@@ -4,9 +4,14 @@ import swaggerUi from "@fastify/swagger-ui";
 import { healthRoute } from "./routes/health";
 import { shortenRoute } from "./routes/shorten";
 import { UrlService } from "./services/url.service";
+import { RandomSource } from "./utils/short-code";
 
 interface BuildAppOptions {
   logger?: boolean;
+  // Randomness source for short code generation. Tests inject a deterministic
+  // function here so the generated codes are predictable; production leaves it
+  // undefined and the generator falls back to Math.random.
+  random?: RandomSource;
 }
 
 export const buildApp = async (
@@ -35,7 +40,7 @@ export const buildApp = async (
 
   // Register routes
   await app.register(healthRoute);
-  await app.register(shortenRoute, { urlStore });
+  await app.register(shortenRoute, { urlStore, random: opts.random });
 
   return app;
 };
