@@ -22,7 +22,7 @@ git checkout 09-postgresql-docker-setup-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:09-postgresql-docker-setup -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/adding-a-real-database/postgresql-docker-setup)
 
 ## Running Tests
 
