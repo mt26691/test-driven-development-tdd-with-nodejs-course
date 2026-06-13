@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from "fastify";
 import { UrlStore } from "../services/url.service";
 import { generateUniqueShortCode, RandomSource } from "../utils/short-code";
+import { MAX_URL_LENGTH, isValidHttpUrl } from "../utils/validate-url";
 
 interface ShortenRequestBody {
   url: string;
@@ -26,7 +27,17 @@ export const shortenRoute: FastifyPluginAsync<ShortenRouteOptions> = async (
         required: ["url"],
         additionalProperties: false,
         properties: {
-          url: { type: "string" },
+          // The schema catches the cheap, structural problems before our
+          // handler ever runs: wrong type, empty string, or absurdly long
+          // input. `format: "uri"` rejects obvious non-URLs, but it is NOT
+          // enough on its own — it happily accepts ftp:// and javascript:,
+          // so the handler still runs the protocol allow-list check below.
+          url: {
+            type: "string",
+            format: "uri",
+            minLength: 1,
+            maxLength: MAX_URL_LENGTH,
+          },
         },
       },
       response: {
@@ -43,6 +54,18 @@ export const shortenRoute: FastifyPluginAsync<ShortenRouteOptions> = async (
     },
     handler: async (request, reply) => {
       const { url } = request.body;
+
+      // Schema validation guarantees `url` is a non-empty, bounded string, but
+      // it cannot enforce our protocol allow-list. Use the WHATWG URL parser to
+      // reject anything that is not http(s) — including ftp:// and javascript:.
+      if (!isValidHttpUrl(url)) {
+        reply.code(400);
+        return {
+          error: "Bad Request",
+          message: "url must be a valid http or https URL",
+        };
+      }
+
       const shortCode = generateUniqueShortCode(urlStore, random);
 
       urlStore.save(shortCode, url);

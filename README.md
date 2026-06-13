@@ -31,7 +31,7 @@ npm install
 npm test
 ```
 
-> **Note:** This is the **Red** phase. `__tests__/shorten.validation.test.ts` adds the unhappy-path tests for `POST /shorten` first, and they **fail** — the route currently accepts any string as a URL, so malformed input (`ftp://`, `javascript:`, `"not a url"`, an empty string, a non-string value, and an over-length URL) is wrongly accepted with `201` instead of being rejected with `400`. The pre-existing tests still pass; the validation logic arrives on the finish branch.
+> **Note:** This is the **Green/Refactor** phase — all tests **pass**. `POST /shorten` now validates input before anything is stored. The body JSON schema enforces `type: "string"`, `format: "uri"`, `minLength: 1`, and `maxLength: 2048`, and the handler runs an extra WHATWG-`URL` protocol allow-list check (`src/utils/validate-url.ts` → `isValidHttpUrl`) so that `ftp://` and `javascript:` are rejected — `format: "uri"` alone accepts those. Every rejection returns `400` with one consistent body: `{ error, message }`, normalised in `app.ts` via `setErrorHandler`. The extracted validator is unit-tested directly in `__tests__/validate-url.test.ts`, and the happy path stays green.
 
 ## Type Checking
 
@@ -39,7 +39,7 @@ npm test
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch — the new test file is fully typed (it uses `light-my-request`'s `Response` type for the inject helper). Only the runtime validation behaviour is missing, which is exactly what TDD's Red phase looks like.
+> **Note:** Type checking **passes** on this branch — `isValidHttpUrl` (a `value is string` type guard), the tightened route schema, and the typed `setErrorHandler` (`FastifyError`) are all fully typed.
 
 ## Contact
 
