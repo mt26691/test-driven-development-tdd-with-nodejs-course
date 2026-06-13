@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 06-in-memory-storage-start
+git checkout 07-unique-short-codes-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 06-in-memory-storage-finish
+git checkout 07-unique-short-codes-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/building-the-core/in-memory-storage)
+[View the lesson on dalabs.academy](<!-- dalabs:07-unique-short-codes -->)
 
 ## Running Tests
 
@@ -31,7 +31,7 @@ npm install
 npm test
 ```
 
-> **Note:** On this branch (Green/Refactor phase), all tests **pass**. The in-memory `UrlService` is implemented and wired into the `POST /shorten` route, so the new `url.service.test.ts` suite passes and the pre-existing `shorten` test still passes — the route contract is unchanged.
+> **Note:** On this branch (Red phase), the new `short-code.test.ts` suite **fails to run** because the generator module `src/utils/short-code.ts` does not exist yet, and the updated `shorten.test.ts` **fails** because the route still returns the hardcoded `"abc123"` instead of a generated code. The pre-existing `health` and `url.service` suites still pass.
 
 ## Type Checking
 
@@ -39,7 +39,7 @@ npm test
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch — the service, its `UrlStore` interface, and the route options are all fully typed.
+> **Note:** Type checking **fails** on this branch — the test imports a module that doesn't exist yet and passes a `random` option to `buildApp` that `BuildAppOptions` doesn't declare. Both are fixed in the finish branch.
 
 ## Contact
 
