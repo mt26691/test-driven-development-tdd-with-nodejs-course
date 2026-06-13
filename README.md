@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 18-error-handling-start
+git checkout 19-collisions-and-locks-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 18-error-handling-finish
+git checkout 19-collisions-and-locks-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/hardening-and-edge-cases/centralized-error-handling)
+[View the lesson on dalabs.academy](<!-- dalabs:19-collisions-and-locks -->)
 
 ## Running Tests
 
@@ -36,7 +36,7 @@ docker compose up -d --wait
 # Apply the migration to the DEV database (creates the `urls` table)
 npx prisma migrate deploy
 
-# Fast unit tests — no database required (stay green, Docker-free)
+# Fast unit tests — no database required
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
@@ -47,34 +47,21 @@ npm run test:integration
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. Error handling is now centralized.
+> **Note:** This is the **Red** phase. The new collision and concurrency tests
+> are present and **fail honestly** — the short-code generator is still naive.
 >
-> **Custom error classes.** `src/errors.ts` defines a shared `AppError` base
-> plus three subclasses — `NotFoundError` (404), `ValidationError` (400), and
-> `ConflictError` (409). Each carries its own `statusCode` and a human-readable
-> `error` label, so throwing one is enough to produce the right HTTP response.
+> `saveWithUniqueCode` generates one code and inserts it with **no retry**, and
+> the store does **not** reject duplicate codes. So a forced collision either
+> overwrites a row (in-memory) or surfaces a raw Prisma unique-constraint error,
+> `P2002` (Postgres), instead of recovering with a fresh code or returning a
+> clean `409`. The concurrency test that forces two requests onto the same first
+> code also fails.
 >
-> **One error handler.** `src/error-handler.ts` exports a single `errorHandler`
-> registered with `app.setErrorHandler`. It maps an `AppError` subclass to its
-> `statusCode` + `{ error, message }`; preserves the chapter-8 behavior of
-> mapping Fastify's schema-validation errors to `400 { error, message }`; and
-> maps anything unexpected to a generic `500 { error: "Internal Server Error",
-> message: "An unexpected error occurred." }`. The 500 path logs the real error
-> server-side via `request.log.error(error)` but never leaks the message or
-> stack to the client.
->
-> **Refactor under green tests.** The redirect, stats, and delete handlers used
-> to build their own `404 { error, message }` bodies by hand. They now simply
-> `throw new NotFoundError(...)` and let the central handler format the
-> response. Because the resulting status code and body shape are identical, the
-> existing endpoint tests stayed green — the error handler is the seam that let
-> the refactor happen with no test changes.
->
-> Unit suite (`npm test`, Docker-free): **11 suites / 62 tests** — a new
-> `error-handling.test.ts` drives each error class through the handler and
-> asserts the status + body, including the unexpected-error 500 that leaks no
-> internals. Integration suite (`npm run test:integration`, Docker): **9 suites
-> / 23 tests** — unchanged; the refactored 404s behave exactly as before.
+> Unit suite (`npm test`, Docker-free): **2 suites fail / 5 tests fail** of
+> 13 suites / 68 tests. Integration suite (`npm run test:integration`, Docker):
+> **1 suite fails / 3 tests fail** of 10 suites / 28 tests. Your job in this
+> chapter is to make them pass with retry-on-conflict (and to add the advisory-
+> lock alternative).
 
 ## Type Checking
 
@@ -82,7 +69,8 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch.
+> **Note:** Type checking **passes** on this branch — the red is behavioral, not
+> a compile error.
 
 ## Contact
 

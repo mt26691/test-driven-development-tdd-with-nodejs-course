@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 import { UrlStore } from "../services/url.service";
-import { generateUniqueShortCode, RandomSource } from "../utils/short-code";
+import { generateShortCode, RandomSource } from "../utils/short-code";
 import { MAX_URL_LENGTH, isValidHttpUrl } from "../utils/validate-url";
 
 interface ShortenRequestBody {
@@ -66,9 +66,12 @@ export const shortenRoute: FastifyPluginAsync<ShortenRouteOptions> = async (
         };
       }
 
-      const shortCode = await generateUniqueShortCode(urlStore, random);
-
-      await urlStore.save(shortCode, url);
+      // The store owns the generate-and-insert loop: it draws a fresh code from
+      // `generate` on every attempt and relies on the database unique constraint
+      // (not a racy pre-check) to reject duplicates, retrying on conflict.
+      const shortCode = await urlStore.saveWithUniqueCode(url, () =>
+        generateShortCode(random)
+      );
 
       reply.code(201);
 

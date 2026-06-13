@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import {
+  GenerateCode,
   ListUrlsParams,
   ListUrlsResult,
   UrlRecord,
@@ -44,6 +45,33 @@ export class PrismaUrlRepository implements UrlStore {
     await this.prisma.url.create({
       data: { shortCode, originalUrl: url },
     });
+  }
+
+  // Naive starting point: generate one code and insert it. A collision with an
+  // existing code surfaces as a raw Prisma P2002 (→ 500), and there is no retry.
+  // This chapter makes generation collision-safe.
+  async saveWithUniqueCode(
+    url: string,
+    generate: GenerateCode,
+    _maxAttempts?: number
+  ): Promise<string> {
+    const shortCode = generate();
+    await this.prisma.url.create({
+      data: { shortCode, originalUrl: url },
+    });
+    return shortCode;
+  }
+
+  // Naive starting point: no advisory lock yet — just generate and insert.
+  async saveWithAdvisoryLock(
+    url: string,
+    generate: GenerateCode
+  ): Promise<string> {
+    const shortCode = generate();
+    await this.prisma.url.create({
+      data: { shortCode, originalUrl: url },
+    });
+    return shortCode;
   }
 
   /**

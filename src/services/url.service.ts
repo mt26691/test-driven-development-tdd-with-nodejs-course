@@ -58,8 +58,19 @@ export interface ListUrlsResult {
   total: number;
 }
 
+/**
+ * A function that produces a candidate short code. The store calls it once per
+ * insert attempt.
+ */
+export type GenerateCode = () => string;
+
 export interface UrlStore {
   save(shortCode: string, url: string): Promise<void>;
+  saveWithUniqueCode(
+    url: string,
+    generate: GenerateCode,
+    maxAttempts?: number
+  ): Promise<string>;
   findByCode(shortCode: string): Promise<string | undefined>;
   findRecordByCode(shortCode: string): Promise<UrlRecord | undefined>;
   incrementClicks(shortCode: string): Promise<void>;
@@ -91,6 +102,19 @@ export class UrlService implements UrlStore {
       // same millisecond still order deterministically — newest first.
       createdAt: new Date(Date.now() + this.seq),
     });
+  }
+
+  // Naive starting point: generate one code and save it. There is no retry on
+  // collision and the store does not reject duplicates — making this safe under
+  // collisions and concurrency is this chapter's job.
+  async saveWithUniqueCode(
+    url: string,
+    generate: GenerateCode,
+    _maxAttempts?: number
+  ): Promise<string> {
+    const shortCode = generate();
+    await this.save(shortCode, url);
+    return shortCode;
   }
 
   async findByCode(shortCode: string): Promise<string | undefined> {
