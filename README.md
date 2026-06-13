@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 13-redirect-start
+git checkout 14-tracking-clicks-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 13-redirect-finish
+git checkout 14-tracking-clicks-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/redirect-to-original-url)
+[View the lesson on dalabs.academy](<!-- dalabs:14-tracking-clicks -->)
 
 ## Running Tests
 
@@ -40,39 +40,41 @@ npx prisma migrate deploy
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and exercise the redirect against the real DB
+# Jest globalSetup) and exercise click tracking against the real DB
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. We add `GET /:code`, which looks up the
-> original URL by its short code and **HTTP-redirects** to it (302), or returns
-> **404** when the code is unknown.
+> **Note:** This is the **Green** phase. Every successful `GET /:code` redirect
+> now increments the URL's `clicks` counter, so after N hits the stored `clicks`
+> equals N.
 >
-> **Why 302, not 301?** A `301 Moved Permanently` is cached hard by browsers and
-> proxies, so later requests would skip the server entirely — the click tracking
-> we add in chapter 14 would never run, and we could never change the target. A
-> `302 Found` is not cached by default, so every hit flows through the handler.
+> **Atomic increment, not read-modify-write.** We bump the counter with a single
+> atomic SQL statement — `UPDATE urls SET clicks = clicks + 1 WHERE short_code = ...`
+> (via Prisma's `{ clicks: { increment: 1 } }`). The naive alternative — read
+> `clicks`, add 1 in JS, write it back — loses counts under concurrency: two
+> redirects can read the same value and both write back the same `+1`, so one
+> hit vanishes (a *lost update*). The atomic increment never loses a hit.
 >
-> **Route ordering / reserved paths:** `GET /:code` is a bare param route at the
-> root, so it could match `/health`, `/shorten`, and `/documentation`. We
-> register it **last** (`src/app.ts`), and Fastify's radix router prefers the
-> more specific static paths — so the catch-all only handles real short codes. A
-> unit test (`__tests__/redirect.test.ts`) proves `GET /health` still returns its
-> JSON, not a redirect or 404.
+> **Awaited, not fire-and-forget.** The handler `await`s `incrementClicks` before
+> redirecting. Awaiting adds a little latency but keeps the count correct and lets
+> a failure surface instead of becoming a silent unhandled rejection. Returning
+> the redirect first and incrementing in the background (fire-and-forget) is
+> faster but risks losing the count on a crash or rejection — we favour
+> correctness at this stage.
 >
-> The lookup stays in the storage layer — the handler reuses the existing
-> `UrlStore.findByCode` (chapter 6), so the route is thin and the same code works
-> against the in-memory store (unit) and Prisma (integration).
+> The increment lives behind the chapter-6 `UrlStore` seam: a new
+> `incrementClicks(shortCode)` method, implemented atomically in
+> `PrismaUrlRepository` and on a counter Map in the in-memory `UrlService`. The
+> route stays thin — `findByCode` then `incrementClicks`.
 >
-> Unit suite (`npm test`, Docker-free): **7 suites / 35 tests** — three new
-> redirect cases (known code → 302 + `Location`; unknown code → 404, no
-> `Location`; `/health` still works). Integration suite
-> (`npm run test:integration`, Docker): **5 suites / 10 tests** — a new
-> `redirect-persists.test.ts` POSTs `/shorten`, then GETs `/:code` and confirms
-> the real DB round-trip redirects.
+> Unit suite (`npm test`, Docker-free): **7 suites / 38 tests** — three new
+> `UrlService` click cases (saved URL starts at 0; N increments → N clicks;
+> unknown code ignored). Integration suite (`npm run test:integration`, Docker):
+> **6 suites / 13 tests** — a new `click-tracking.test.ts` proves N redirects
+> yield N clicks against the real database.
 
 ## Type Checking
 

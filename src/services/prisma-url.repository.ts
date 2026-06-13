@@ -56,4 +56,20 @@ export class PrismaUrlRepository implements UrlStore {
 
     return row?.originalUrl ?? undefined;
   }
+
+  /**
+   * Atomically bump the click counter for a short code.
+   *
+   * `{ clicks: { increment: 1 } }` compiles to `SET clicks = clicks + 1`, which
+   * the database applies as one atomic statement. We deliberately avoid a
+   * read-modify-write (read clicks, add 1 in JS, write it back): two concurrent
+   * redirects could both read the same value and both write back the same +1,
+   * losing a count. The atomic increment never loses a hit.
+   */
+  async incrementClicks(shortCode: string): Promise<void> {
+    await this.prisma.url.update({
+      where: { shortCode },
+      data: { clicks: { increment: 1 } },
+    });
+  }
 }

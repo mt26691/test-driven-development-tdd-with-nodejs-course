@@ -23,4 +23,26 @@ describe("UrlService", () => {
 
     expect(await service.findByCode("abc123")).toBe("https://dalabs.academy");
   });
+
+  it("starts a saved url at zero clicks", async () => {
+    await service.save("abc123", "https://dalabs.academy");
+
+    expect(await service.getClicks("abc123")).toBe(0);
+  });
+
+  it("counts each increment so N increments yield N clicks", async () => {
+    await service.save("abc123", "https://dalabs.academy");
+
+    for (let i = 0; i < 5; i++) {
+      await service.incrementClicks("abc123");
+    }
+
+    expect(await service.getClicks("abc123")).toBe(5);
+  });
+
+  it("ignores increments for an unknown short code", async () => {
+    await service.incrementClicks("does-not-exist");
+
+    expect(await service.getClicks("does-not-exist")).toBeUndefined();
+  });
 });
