@@ -11,23 +11,23 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 11-prisma-and-schema-start
+git checkout 12-migrate-to-database-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 11-prisma-and-schema-finish
+git checkout 12-migrate-to-database-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/adding-a-real-database/prisma-and-schema)
+[View the lesson on dalabs.academy](<!-- dalabs:12-migrate-to-database -->)
 
 ## Running Tests
 
 ```bash
-npm install                 # installs Prisma and runs `prisma generate` (postinstall)
+npm install                 # installs deps and runs `prisma generate` (postinstall)
 cp .env.example .env        # local dev/test connection config
 
 # Start PostgreSQL and wait until it is healthy
@@ -39,25 +39,27 @@ npx prisma migrate deploy
 # Fast unit tests — no database required (stay green)
 npm test
 
-# Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and talk to the real `urls` table through Prisma
+# Integration tests — Docker required (RED on this branch, see note)
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. We install Prisma, model the `Url` table
-> in `prisma/schema.prisma`, run the first migration (`prisma/migrations/`), and
-> generate a typed client (`src/db/prisma.ts`). The integration test
-> `__tests__/integration/url-model.test.ts` now creates and reads a `Url` row
-> through Prisma — proving the unique `shortCode`, the `clicks` default of 0, and
-> the generated `createdAt`. Migrations are applied to the test database
-> automatically by `__tests__/integration/global-setup.ts` (`prisma migrate
-> deploy`). The centralized `truncateAllTables()` cleanup now skips Prisma's
-> `_prisma_migrations` bookkeeping table so migration history survives between
-> tests. **The application still serves requests from the in-memory Map** —
-> swapping the store for a Prisma-backed repository is the next chapter.
+> **Note:** This is the **Red** phase of the database-migration chapter. Two new
+> integration tests describe a Prisma-backed `UrlStore` implementation that does
+> not exist yet:
+> `__tests__/integration/prisma-url.repository.test.ts` exercises the repository
+> directly (`save` then `findByCode`, unknown code → `undefined`, `clicks = 0`),
+> and `__tests__/integration/shorten-persists.test.ts` POSTs `/shorten` through
+> `buildApp` wired with the Prisma store and asserts the row lands in the `urls`
+> table. Both fail to compile with `Cannot find module
+> '../../src/services/prisma-url.repository'` — an **honest missing-module red**,
+> not a connectivity error (the existing `db.test.ts` and `url-model.test.ts`
+> still pass against the same live database). The fast unit suite stays **green**
+> (6 suites / 32 tests) because the route is still exercised with the in-memory
+> `UrlService`. The finish branch implements the Prisma repository and swaps it
+> into `buildApp` as the default store.
 
 ## Type Checking
 
@@ -65,8 +67,10 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch (the generated Prisma client
-> provides the `Url` types used by the integration test).
+> **Note:** Type checking **fails** on this branch — the new integration tests
+> import a module (`src/services/prisma-url.repository`) and a `buildApp` option
+> (`urlStore`) that do not exist yet. That is the Red state the finish branch
+> resolves.
 
 ## Contact
 
