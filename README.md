@@ -22,7 +22,7 @@ git checkout 16-url-stats-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:16-url-stats -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/url-stats)
 
 ## Running Tests
 
