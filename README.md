@@ -22,7 +22,7 @@ git checkout 10-test-isolation-foundations-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:10-test-isolation-foundations -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/adding-a-real-database/test-isolation-foundations)
 
 ## Running Tests
 
