@@ -22,7 +22,7 @@ git checkout 14-tracking-clicks-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:14-tracking-clicks -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/tracking-clicks)
 
 ## Running Tests
 
