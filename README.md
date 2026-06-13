@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 14-tracking-clicks-start
+git checkout 15-list-urls-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 14-tracking-clicks-finish
+git checkout 15-list-urls-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/tracking-clicks)
+[View the lesson on dalabs.academy](<!-- dalabs:15-list-urls -->)
 
 ## Running Tests
 
@@ -36,45 +36,35 @@ docker compose up -d --wait
 # Apply the migration to the DEV database (creates the `urls` table)
 npx prisma migrate deploy
 
-# Fast unit tests — no database required (stay green, Docker-free)
+# Fast unit tests — no database required
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and exercise click tracking against the real DB
+# Jest globalSetup) and exercise the list endpoint against the real DB
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. Every successful `GET /:code` redirect
-> now increments the URL's `clicks` counter, so after N hits the stored `clicks`
-> equals N.
+> **Note:** This is the **Red** phase. The new tests for `GET /urls`
+> (`__tests__/list.test.ts` and `__tests__/integration/list-urls.test.ts`) are
+> written first and **fail on purpose** — the list endpoint does not exist yet.
 >
-> **Atomic increment, not read-modify-write.** We bump the counter with a single
-> atomic SQL statement — `UPDATE urls SET clicks = clicks + 1 WHERE short_code = ...`
-> (via Prisma's `{ clicks: { increment: 1 } }`). The naive alternative — read
-> `clicks`, add 1 in JS, write it back — loses counts under concurrency: two
-> redirects can read the same value and both write back the same `+1`, so one
-> hit vanishes (a *lost update*). The atomic increment never loses a hit.
+> The red is **behavioral, not a compile error** (`npm run typecheck` still
+> passes): a request to `GET /urls` is swallowed by the `/:code` catch-all and
+> returns `404` instead of a paginated list. With the Postgres container up, the
+> integration failures are the *missing endpoint*, not a connectivity problem —
+> the sibling integration suites still talk to the database happily.
 >
-> **Awaited, not fire-and-forget.** The handler `await`s `incrementClicks` before
-> redirecting. Awaiting adds a little latency but keeps the count correct and lets
-> a failure surface instead of becoming a silent unhandled rejection. Returning
-> the redirect first and incrementing in the background (fire-and-forget) is
-> faster but risks losing the count on a crash or rejection — we favour
-> correctness at this stage.
+> Unit suite (`npm test`, Docker-free): **1 failed, 7 passed of 8 suites** —
+> **9 failed, 38 passed of 47 tests**. Integration suite
+> (`npm run test:integration`, Docker): **1 failed, 6 passed of 7 suites** —
+> **4 failed, 13 passed of 17 tests**.
 >
-> The increment lives behind the chapter-6 `UrlStore` seam: a new
-> `incrementClicks(shortCode)` method, implemented atomically in
-> `PrismaUrlRepository` and on a counter Map in the in-memory `UrlService`. The
-> route stays thin — `findByCode` then `incrementClicks`.
->
-> Unit suite (`npm test`, Docker-free): **7 suites / 38 tests** — three new
-> `UrlService` click cases (saved URL starts at 0; N increments → N clicks;
-> unknown code ignored). Integration suite (`npm run test:integration`, Docker):
-> **6 suites / 13 tests** — a new `click-tracking.test.ts` proves N redirects
-> yield N clicks against the real database.
+> The finish branch implements `GET /urls` with limit/offset pagination, a
+> `{ data, page, limit, total }` envelope, querystring validation, and the list
+> route registered before the catch-all — turning every red test green.
 
 ## Type Checking
 
@@ -82,7 +72,8 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch.
+> **Note:** Type checking **passes** on this branch — the failing tests are
+> behavioral (missing endpoint), not type errors.
 
 ## Contact
 
