@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 16-url-stats-start
+git checkout 17-delete-url-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 16-url-stats-finish
+git checkout 17-delete-url-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/url-stats)
+[View the lesson on dalabs.academy](<!-- dalabs:17-delete-url -->)
 
 ## Running Tests
 
@@ -36,48 +36,32 @@ docker compose up -d --wait
 # Apply the migration to the DEV database (creates the `urls` table)
 npx prisma migrate deploy
 
-# Fast unit tests — no database required (stay green, Docker-free)
+# Fast unit tests — no database required (the new delete suite fails here)
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and exercise the stats endpoint against the real DB
+# Jest globalSetup) and run the delete tests against the real DB (also red)
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. `GET /urls/:code/stats` returns the
-> metadata and click stats for a single short code.
+> **Note:** This is the **Red** phase. The new `delete.test.ts` suites are
+> present but `DELETE /urls/:code` is not implemented yet, so they fail.
 >
-> **Response shape.** The endpoint returns
-> `{ shortCode, originalUrl, clicks, createdAt, shortUrl }`, locked with a
-> Fastify response schema. `createdAt` is serialized as an ISO 8601 string
-> (`Date.prototype.toISOString()`), so the JSON shape is deterministic. An
-> unknown code returns `404 { error, message }`.
+> **What is red.** The unit suite fails with **4 failed of 57** — the DELETE
+> route does not exist, so the request 404s instead of returning 204, the row is
+> never removed (a later redirect still 302s), and the targeted code is still
+> found. The integration suite fails with **2 failed of 23** — deleting a known
+> code returns 404 instead of 204, and a later stats lookup still returns 200
+> because the row was never deleted.
 >
-> **The seam.** Stats needs the *whole* record, not just the original URL, so a
-> new `findRecordByCode(shortCode)` is added to the chapter-6 `UrlStore`
-> interface — returning the full `UrlRecord` (`shortCode`, `originalUrl`,
-> `clicks`, `createdAt`) or `undefined` for an unknown code. It is implemented in
-> both `PrismaUrlRepository` (a projected `findUnique`) and the in-memory
-> `UrlService` (which already tracks the full record). The handler stays thin.
->
-> **Route ordering.** `/urls/:code/stats` has its own static prefix and segment
-> count, so Fastify's radix router never confuses it with the bare `/:code`
-> catch-all or the `/urls` list. It is registered before the catch-all alongside
-> the list route. A test asserts the path returns the stats object (200, no
-> `Location` header, not the list envelope), not a redirect or the list.
->
-> **Richer stats later.** Fields like `lastAccessedAt`, referrers, or per-day
-> click rollups would need a richer data model (e.g. a separate click-events
-> table) — foreshadowing the table-partitioning bonus chapter.
->
-> Unit suite (`npm test`, Docker-free): **9 suites / 52 tests** — a new
-> `stats.test.ts` covers the happy path, ISO date serialization, click counts,
-> the 404, and the route-ordering proof. Integration suite
-> (`npm run test:integration`, Docker): **8 suites / 20 tests** — a new
-> `stats.test.ts` proves stats against Postgres, including clicks after redirects.
+> **Your task.** Add `DELETE /urls/:code`: a new `delete.ts` route, a
+> `delete(shortCode)` method on the `UrlStore` interface (returning a boolean —
+> was a row removed?) implemented in both `PrismaUrlRepository` and the in-memory
+> `UrlService`, and the route registration in `app.ts`. Map a real deletion to
+> `204` and a miss to `404`.
 
 ## Type Checking
 
@@ -85,7 +69,8 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch.
+> **Note:** Type checking **passes** on this branch — the red is behavioral
+> (the endpoint is missing), not a compile error.
 
 ## Contact
 
