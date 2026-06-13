@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 17-delete-url-start
+git checkout 18-error-handling-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 17-delete-url-finish
+git checkout 18-error-handling-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/delete-a-url)
+[View the lesson on dalabs.academy](<!-- dalabs:18-error-handling -->)
 
 ## Running Tests
 
@@ -36,51 +36,36 @@ docker compose up -d --wait
 # Apply the migration to the DEV database (creates the `urls` table)
 npx prisma migrate deploy
 
-# Fast unit tests — no database required (stay green, Docker-free)
+# Fast unit tests — no database required (Docker-free)
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and confirm the row is really gone in the real DB
+# Jest globalSetup)
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. `DELETE /urls/:code` removes a single
-> short URL.
+> **Note:** This is the **Red** phase. A new `__tests__/error-handling.test.ts`
+> describes the centralized error handler we are about to build: throwing a
+> `NotFoundError`, `ValidationError`, or `ConflictError` should produce the
+> matching status code and a clean `{ error, message }` body, and an
+> *unexpected* error should become a generic `500` that leaks no internals.
 >
-> **Status codes.** Deleting an existing code returns `204 No Content` with an
-> empty body, and a later `GET /:code` or `GET /urls/:code/stats` then returns
-> `404`. Deleting a missing or already-deleted code returns `404 { error,
-> message }` — chosen over an idempotent `204` so the response is *informative*
-> (the client learns the resource was not there) and consistent with the 404s
-> the redirect and stats endpoints already return for unknown codes.
+> The starter `src/errors.ts` already defines the error classes, and
+> `src/error-handler.ts` is a **placeholder** that just forwards the error to
+> Fastify's default handling. That placeholder is enough to compile (typecheck
+> passes), but it does not map the errors correctly: the AppError responses
+> carry an extra `statusCode` field, and the unexpected error **leaks its real
+> message** (`"DB password is hunter2 at line 42"`) instead of a safe generic
+> body — so **4 of the 5** new tests fail honestly.
 >
-> **The seam.** A new `delete(shortCode)` method is added to the chapter-6
-> `UrlStore` interface, returning a `boolean`: `true` when a row was actually
-> removed, `false` when the code did not exist. The thin handler maps `true → 204`
-> and `false → 404` with no extra lookup. It is implemented in both
-> `PrismaUrlRepository` (`deleteMany` + a `count > 0` check, which never throws on
-> a miss) and the in-memory `UrlService` (`Map.delete` already returns that
-> boolean).
->
-> **Hard delete.** This is a *hard* delete — the row is gone. A *soft* delete
-> would add a `deletedAt` column and keep the history, but then every read
-> (redirect, list, stats) would have to filter it out. Hard delete keeps the
-> queries simple; soft delete is the right call when you need audit trails,
-> undo, or to preserve historical stats.
->
-> **Confirming deletion.** The integration test does not trust the status code
-> alone: after the `204` it queries the database directly with
-> `prisma.url.findUnique` and asserts the row is `null`, proving the data is
-> actually gone.
->
-> Unit suite (`npm test`, Docker-free): **10 suites / 57 tests** — a new
-> `delete.test.ts` covers the 204 + empty body, the follow-up 404s, the
-> missing-code 404, the already-deleted 404, and that only the targeted code is
-> removed. Integration suite (`npm run test:integration`, Docker): **9 suites /
-> 23 tests** — a new `delete.test.ts` confirms the row is gone in Postgres.
+> Unit suite (`npm test`, Docker-free): **1 suite fails / 11 total — 4 tests
+> fail / 62 total**. Every other suite stays green. Integration suite (`npm run
+> test:integration`, Docker): **9 suites / 23 tests** all green — the routes are
+> untouched on this branch. Your job in the finish branch is to write the real
+> `errorHandler` and refactor the routes to throw these errors.
 
 ## Type Checking
 
@@ -88,7 +73,9 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch.
+> **Note:** Type checking **passes** on this branch — the failure is behavioral,
+> not a compile error. The placeholder handler and the error classes both
+> typecheck cleanly.
 
 ## Contact
 
