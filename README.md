@@ -44,6 +44,7 @@ The `main` branch contains the final, completed version of the entire course —
 | 16 | URL Stats (GET /urls/:code/stats) | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/16-url-stats-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/16-url-stats-finish) |
 | 17 | Delete a URL (DELETE /urls/:code) | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/17-delete-url-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/17-delete-url-finish) |
 | 18 | Centralized Error Handling | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/18-error-handling-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/18-error-handling-finish) |
+| 19 | Handling Collisions & Advisory Locks | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/19-collisions-and-locks-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/19-collisions-and-locks-finish) |
 
 ## Contact
 
