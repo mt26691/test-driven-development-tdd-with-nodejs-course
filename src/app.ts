@@ -1,6 +1,7 @@
-import Fastify, { FastifyError, FastifyInstance } from "fastify";
+import Fastify, { FastifyInstance } from "fastify";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
+import { errorHandler } from "./error-handler";
 import { healthRoute } from "./routes/health";
 import { shortenRoute } from "./routes/shorten";
 import { listRoute } from "./routes/list";
@@ -31,24 +32,10 @@ export const buildApp = async (
 ): Promise<FastifyInstance> => {
   const app = Fastify({ logger: opts.logger ?? true });
 
-  // Normalise every error into a single, consistent shape: { error, message }.
-  // Fastify's default body for a failed schema validation carries extra fields
-  // (statusCode, code), which would make our 400s look different depending on
-  // whether the schema or our own handler rejected the request. Mapping schema
-  // validation errors here keeps the API's error contract uniform — and seeds
-  // the dedicated error-handling chapter, where this grows into a full strategy.
-  app.setErrorHandler((error: FastifyError, _request, reply) => {
-    if (error.validation) {
-      reply.code(400).send({
-        error: "Bad Request",
-        message: error.message,
-      });
-      return;
-    }
-
-    // Anything unexpected keeps Fastify's default handling.
-    reply.send(error);
-  });
+  // One centralized error handler maps custom AppError subclasses, Fastify's
+  // schema-validation errors, and anything unexpected to a single { error,
+  // message } envelope (see src/error-handler.ts).
+  app.setErrorHandler(errorHandler);
 
   // Pick the storage backend once and share it across every request handled by
   // this app instance. Production defaults to the Prisma-backed repository, so

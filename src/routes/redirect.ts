@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 import { UrlStore } from "../services/url.service";
+import { NotFoundError } from "../errors";
 
 interface RedirectRouteParams {
   code: string;
@@ -33,11 +34,7 @@ export const redirectRoute: FastifyPluginAsync<RedirectRouteOptions> = async (
       const originalUrl = await urlStore.findByCode(code);
 
       if (originalUrl === undefined) {
-        reply.code(404);
-        return {
-          error: "Not Found",
-          message: `No URL found for code "${code}"`,
-        };
+        throw new NotFoundError(`No URL found for code "${code}"`);
       }
 
       // Count the hit. We `await` so a failed increment surfaces rather than

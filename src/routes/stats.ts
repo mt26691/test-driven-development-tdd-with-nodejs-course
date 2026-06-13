@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 import { UrlStore } from "../services/url.service";
+import { NotFoundError } from "../errors";
 
 interface StatsRouteParams {
   code: string;
@@ -46,17 +47,13 @@ export const statsRoute: FastifyPluginAsync<StatsRouteOptions> = async (
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (request) => {
       const { code } = request.params;
 
       const record = await urlStore.findRecordByCode(code);
 
       if (record === undefined) {
-        reply.code(404);
-        return {
-          error: "Not Found",
-          message: `No URL found for code "${code}"`,
-        };
+        throw new NotFoundError(`No URL found for code "${code}"`);
       }
 
       return {

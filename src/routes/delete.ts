@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 import { UrlStore } from "../services/url.service";
+import { NotFoundError } from "../errors";
 
 interface DeleteRouteParams {
   code: string;
@@ -44,11 +45,7 @@ export const deleteRoute: FastifyPluginAsync<DeleteRouteOptions> = async (
       const deleted = await urlStore.delete(code);
 
       if (!deleted) {
-        reply.code(404);
-        return {
-          error: "Not Found",
-          message: `No URL found for code "${code}"`,
-        };
+        throw new NotFoundError(`No URL found for code "${code}"`);
       }
 
       reply.code(204);

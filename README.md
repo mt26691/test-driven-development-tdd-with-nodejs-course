@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 17-delete-url-start
+git checkout 18-error-handling-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 17-delete-url-finish
+git checkout 18-error-handling-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/expanding-the-api/delete-a-url)
+[View the lesson on dalabs.academy](<!-- dalabs:18-error-handling -->)
 
 ## Running Tests
 
@@ -40,47 +40,41 @@ npx prisma migrate deploy
 npm test
 
 # Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup) and confirm the row is really gone in the real DB
+# Jest globalSetup)
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. `DELETE /urls/:code` removes a single
-> short URL.
+> **Note:** This is the **Green** phase. Error handling is now centralized.
 >
-> **Status codes.** Deleting an existing code returns `204 No Content` with an
-> empty body, and a later `GET /:code` or `GET /urls/:code/stats` then returns
-> `404`. Deleting a missing or already-deleted code returns `404 { error,
-> message }` — chosen over an idempotent `204` so the response is *informative*
-> (the client learns the resource was not there) and consistent with the 404s
-> the redirect and stats endpoints already return for unknown codes.
+> **Custom error classes.** `src/errors.ts` defines a shared `AppError` base
+> plus three subclasses — `NotFoundError` (404), `ValidationError` (400), and
+> `ConflictError` (409). Each carries its own `statusCode` and a human-readable
+> `error` label, so throwing one is enough to produce the right HTTP response.
 >
-> **The seam.** A new `delete(shortCode)` method is added to the chapter-6
-> `UrlStore` interface, returning a `boolean`: `true` when a row was actually
-> removed, `false` when the code did not exist. The thin handler maps `true → 204`
-> and `false → 404` with no extra lookup. It is implemented in both
-> `PrismaUrlRepository` (`deleteMany` + a `count > 0` check, which never throws on
-> a miss) and the in-memory `UrlService` (`Map.delete` already returns that
-> boolean).
+> **One error handler.** `src/error-handler.ts` exports a single `errorHandler`
+> registered with `app.setErrorHandler`. It maps an `AppError` subclass to its
+> `statusCode` + `{ error, message }`; preserves the chapter-8 behavior of
+> mapping Fastify's schema-validation errors to `400 { error, message }`; and
+> maps anything unexpected to a generic `500 { error: "Internal Server Error",
+> message: "An unexpected error occurred." }`. The 500 path logs the real error
+> server-side via `request.log.error(error)` but never leaks the message or
+> stack to the client.
 >
-> **Hard delete.** This is a *hard* delete — the row is gone. A *soft* delete
-> would add a `deletedAt` column and keep the history, but then every read
-> (redirect, list, stats) would have to filter it out. Hard delete keeps the
-> queries simple; soft delete is the right call when you need audit trails,
-> undo, or to preserve historical stats.
+> **Refactor under green tests.** The redirect, stats, and delete handlers used
+> to build their own `404 { error, message }` bodies by hand. They now simply
+> `throw new NotFoundError(...)` and let the central handler format the
+> response. Because the resulting status code and body shape are identical, the
+> existing endpoint tests stayed green — the error handler is the seam that let
+> the refactor happen with no test changes.
 >
-> **Confirming deletion.** The integration test does not trust the status code
-> alone: after the `204` it queries the database directly with
-> `prisma.url.findUnique` and asserts the row is `null`, proving the data is
-> actually gone.
->
-> Unit suite (`npm test`, Docker-free): **10 suites / 57 tests** — a new
-> `delete.test.ts` covers the 204 + empty body, the follow-up 404s, the
-> missing-code 404, the already-deleted 404, and that only the targeted code is
-> removed. Integration suite (`npm run test:integration`, Docker): **9 suites /
-> 23 tests** — a new `delete.test.ts` confirms the row is gone in Postgres.
+> Unit suite (`npm test`, Docker-free): **11 suites / 62 tests** — a new
+> `error-handling.test.ts` drives each error class through the handler and
+> asserts the status + body, including the unexpected-error 500 that leaks no
+> internals. Integration suite (`npm run test:integration`, Docker): **9 suites
+> / 23 tests** — unchanged; the refactored 404s behave exactly as before.
 
 ## Type Checking
 
