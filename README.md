@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 09-postgresql-docker-setup-start
+git checkout 10-test-isolation-foundations-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 09-postgresql-docker-setup-finish
+git checkout 10-test-isolation-foundations-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/adding-a-real-database/postgresql-docker-setup)
+[View the lesson on dalabs.academy](<!-- dalabs:10-test-isolation-foundations -->)
 
 ## Running Tests
 
@@ -36,14 +36,14 @@ docker compose up -d --wait
 # Fast unit tests — no database required
 npm test
 
-# Integration test — connects to the real test database
+# Integration tests — connect to the real test database (now isolated)
 npm run test:integration
 
 # When you are done, stop the database
-docker compose down        # add -v to also delete the data volume
+docker compose down -v     # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. `docker compose up -d` stands up a pinned `postgres:16-alpine` instance hosting two databases — `urlshortener` (dev) and `urlshortener_test` (test, created by `docker/init/01-create-test-db.sql`). The new integration test (`__tests__/integration/db.test.ts`) connects via the `pg`-backed pool in `src/db/pool.ts`, reads `TEST_DATABASE_URL` from `.env`, and runs `SELECT 1` — proving real connectivity. A light `truncateAllTables` helper seeds the dedicated test-isolation chapter. The in-memory store is still the app's storage backend; the Prisma migration comes later. Unit tests stay fast and Docker-free.
+> **Note:** This is the **Green** phase. The two leaky integration tests from the start branch now pass in any order — and they pass **unchanged**. The fix is centralized in `__tests__/integration/setup-isolation.ts`, wired into `jest.integration.config.ts` via `setupFilesAfterEnv`: it registers a single `beforeEach` that calls `truncateAllTables()`, so every integration test starts from an empty database. No test has to remember to clean up after itself. The `urls_demo` table is a throwaway teaching table created by the suite itself (`helpers/urls-demo.ts`) — distinct from the Prisma-managed `Url` table introduced later. Unit tests stay fast and Docker-free.
 
 ## Type Checking
 
@@ -51,7 +51,7 @@ docker compose down        # add -v to also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **passes** on this branch — the `pg` `Pool`, the typed query result in the integration test, and the truncate helper are all fully typed (`@types/pg`).
+> **Note:** Type checking **passes** on this branch.
 
 ## Contact
 
