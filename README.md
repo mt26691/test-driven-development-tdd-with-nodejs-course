@@ -36,30 +36,39 @@ docker compose up -d --wait
 # Apply the migration to the DEV database (creates the `urls` table)
 npx prisma migrate deploy
 
-# Fast unit tests — no database required (stay green)
+# Fast unit tests — no database required (stay green, Docker-free)
 npm test
 
-# Integration tests — Docker required (RED on this branch, see note)
+# Integration tests — apply migrations to the TEST database (automatic, via
+# Jest globalSetup) and exercise the Prisma-backed store against the real DB
 npm run test:integration
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Red** phase of the database-migration chapter. Two new
-> integration tests describe a Prisma-backed `UrlStore` implementation that does
-> not exist yet:
-> `__tests__/integration/prisma-url.repository.test.ts` exercises the repository
-> directly (`save` then `findByCode`, unknown code → `undefined`, `clicks = 0`),
-> and `__tests__/integration/shorten-persists.test.ts` POSTs `/shorten` through
-> `buildApp` wired with the Prisma store and asserts the row lands in the `urls`
-> table. Both fail to compile with `Cannot find module
-> '../../src/services/prisma-url.repository'` — an **honest missing-module red**,
-> not a connectivity error (the existing `db.test.ts` and `url-model.test.ts`
-> still pass against the same live database). The fast unit suite stays **green**
-> (6 suites / 32 tests) because the route is still exercised with the in-memory
-> `UrlService`. The finish branch implements the Prisma repository and swaps it
-> into `buildApp` as the default store.
+> **Note:** This is the **Green** phase. We retire the in-memory `Map` from the
+> request path and serve from PostgreSQL. A new `PrismaUrlRepository`
+> (`src/services/prisma-url.repository.ts`) implements the **same `UrlStore`
+> interface** introduced in chapter 6 — `save(shortCode, url)` /
+> `findByCode(shortCode)` — mapping `url` to the `originalUrl` column and letting
+> the database fill `clicks` (0), `createdAt`, and the serial `id`. `buildApp`
+> now defaults to this Prisma store, so the real app persists to Postgres; tests
+> inject whichever backend they need.
+>
+> **The seam from chapter 6 pays off:** the route file
+> (`src/routes/shorten.ts`) changes by **just 2 lines** — adding `await` to the
+> two store calls, because `UrlStore` became async. Its logic, schema,
+> validation, and response are otherwise byte-for-byte identical.
+>
+> Two integration tests drive the swap (Docker-required):
+> `prisma-url.repository.test.ts` exercises the repository directly, and
+> `shorten-persists.test.ts` POSTs `/shorten` through `buildApp` and confirms the
+> row actually lands in the `urls` table. Integration: **4 suites / 8 tests**.
+>
+> The fast unit suite stays **green and Docker-free** (6 suites / 32 tests): the
+> route's unit tests inject the in-memory `UrlService`, so they never reach for a
+> database — run them with Postgres stopped and they still pass.
 
 ## Type Checking
 
@@ -67,10 +76,7 @@ docker compose down -v      # also delete the data volume
 npm run typecheck
 ```
 
-> **Note:** Type checking **fails** on this branch — the new integration tests
-> import a module (`src/services/prisma-url.repository`) and a `buildApp` option
-> (`urlStore`) that do not exist yet. That is the Red state the finish branch
-> resolves.
+> **Note:** Type checking **passes** on this branch.
 
 ## Contact
 

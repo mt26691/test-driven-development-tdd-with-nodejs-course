@@ -55,16 +55,20 @@ export const generateShortCode = (
  * If a freshly generated code already exists, we simply draw another one and
  * try again. The loop is the uniqueness guarantee.
  *
+ * The lookup is `await`ed because {@link UrlStore.findByCode} is async — the
+ * store may be a database. The randomness source stays synchronous, so the
+ * generated codes remain perfectly deterministic under test.
+ *
  * @param store - the store to check candidate codes against.
  * @param random - the randomness source; defaults to `Math.random`.
  */
-export const generateUniqueShortCode = (
+export const generateUniqueShortCode = async (
   store: UrlStore,
   random: RandomSource = Math.random
-): string => {
+): Promise<string> => {
   let code = generateShortCode(random);
 
-  while (store.findByCode(code) !== undefined) {
+  while ((await store.findByCode(code)) !== undefined) {
     code = generateShortCode(random);
   }
 

@@ -7,20 +7,20 @@ describe("UrlService", () => {
     service = new UrlService();
   });
 
-  it("stores a url and returns it when looked up by its short code", () => {
-    service.save("abc123", "https://dalabs.academy");
+  it("stores a url and returns it when looked up by its short code", async () => {
+    await service.save("abc123", "https://dalabs.academy");
 
-    expect(service.findByCode("abc123")).toBe("https://dalabs.academy");
+    expect(await service.findByCode("abc123")).toBe("https://dalabs.academy");
   });
 
-  it("returns undefined for an unknown short code", () => {
-    expect(service.findByCode("does-not-exist")).toBeUndefined();
+  it("returns undefined for an unknown short code", async () => {
+    expect(await service.findByCode("does-not-exist")).toBeUndefined();
   });
 
-  it("overwrites the url when the same short code is saved twice", () => {
-    service.save("abc123", "https://example.com");
-    service.save("abc123", "https://dalabs.academy");
+  it("overwrites the url when the same short code is saved twice", async () => {
+    await service.save("abc123", "https://example.com");
+    await service.save("abc123", "https://dalabs.academy");
 
-    expect(service.findByCode("abc123")).toBe("https://dalabs.academy");
+    expect(await service.findByCode("abc123")).toBe("https://dalabs.academy");
   });
 });

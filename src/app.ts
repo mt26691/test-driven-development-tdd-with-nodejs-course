@@ -3,7 +3,9 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { healthRoute } from "./routes/health";
 import { shortenRoute } from "./routes/shorten";
-import { UrlService } from "./services/url.service";
+import { UrlStore } from "./services/url.service";
+import { PrismaUrlRepository } from "./services/prisma-url.repository";
+import { prisma } from "./db/prisma";
 import { RandomSource } from "./utils/short-code";
 
 interface BuildAppOptions {
@@ -12,6 +14,12 @@ interface BuildAppOptions {
   // function here so the generated codes are predictable; production leaves it
   // undefined and the generator falls back to Math.random.
   random?: RandomSource;
+  // The storage backend, injected behind the `UrlStore` interface. This is the
+  // seam from chapter 6 paying off: leave it undefined and the app uses the
+  // Prisma-backed repository (real persistence to Postgres); the fast unit tests
+  // pass an in-memory `UrlService` so they run without a database; the
+  // integration tests pass a `PrismaUrlRepository`. The route never knows which.
+  urlStore?: UrlStore;
 }
 
 export const buildApp = async (
@@ -38,10 +46,12 @@ export const buildApp = async (
     reply.send(error);
   });
 
-  // Instantiate the store once and share it across every request handled by
-  // this app instance. Later chapters swap this for a database-backed store
-  // implementing the same interface — the routes never need to change.
-  const urlStore = new UrlService();
+  // Pick the storage backend once and share it across every request handled by
+  // this app instance. Production defaults to the Prisma-backed repository, so
+  // the real app persists to Postgres; tests inject their own store through
+  // `opts.urlStore`. Both satisfy the same `UrlStore` interface, so the routes
+  // never need to change — this is the chapter-6 seam paying off.
+  const urlStore = opts.urlStore ?? new PrismaUrlRepository(prisma);
 
   await app.register(swagger, {
     openapi: {

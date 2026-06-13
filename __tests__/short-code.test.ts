@@ -55,18 +55,18 @@ describe("generateShortCode", () => {
 });
 
 describe("generateUniqueShortCode", () => {
-  it("returns a fresh code when the store is empty", () => {
+  it("returns a fresh code when the store is empty", async () => {
     const store = new UrlService();
 
-    const code = generateUniqueShortCode(store, sequence([0]));
+    const code = await generateUniqueShortCode(store, sequence([0]));
 
     expect(code).toBe("000000");
   });
 
-  it("regenerates when the first candidate already exists in the store", () => {
+  it("regenerates when the first candidate already exists in the store", async () => {
     const store = new UrlService();
     // Seed the store so the first candidate ("000000") collides.
-    store.save("000000", "https://dalabs.academy");
+    await store.save("000000", "https://dalabs.academy");
 
     // First six draws produce "000000" (collision); next six produce "zzzzzz".
     const almostOne = 0.999999;
@@ -85,7 +85,7 @@ describe("generateUniqueShortCode", () => {
       almostOne,
     ]);
 
-    const code = generateUniqueShortCode(store, random);
+    const code = await generateUniqueShortCode(store, random);
 
     expect(code).toBe("zzzzzz");
   });

@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import type { Response as InjectResponse } from "light-my-request";
 import { buildApp } from "../src/app";
+import { UrlService } from "../src/services/url.service";
 
 /**
  * Validation tests for POST /shorten — the UNHAPPY PATH FIRST.
@@ -18,7 +19,9 @@ describe("POST /shorten — input validation", () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    app = await buildApp({ logger: false });
+    // Inject the in-memory store so the happy-path cases (201) never touch a
+    // database — these validation tests stay fast and Docker-free.
+    app = await buildApp({ logger: false, urlStore: new UrlService() });
     await app.ready();
   });
 

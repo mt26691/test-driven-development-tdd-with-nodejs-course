@@ -66,9 +66,9 @@ export const shortenRoute: FastifyPluginAsync<ShortenRouteOptions> = async (
         };
       }
 
-      const shortCode = generateUniqueShortCode(urlStore, random);
+      const shortCode = await generateUniqueShortCode(urlStore, random);
 
-      urlStore.save(shortCode, url);
+      await urlStore.save(shortCode, url);
 
       reply.code(201);
 

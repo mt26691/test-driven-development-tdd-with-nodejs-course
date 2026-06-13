@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { buildApp } from "../src/app";
+import { UrlService } from "../src/services/url.service";
 
 describe("POST /shorten", () => {
   let app: FastifyInstance;
@@ -11,7 +12,14 @@ describe("POST /shorten", () => {
   it("should return 201 with a generated short code and short URL", async () => {
     // Inject a deterministic randomness source so the generated code is known.
     // random() === 0 maps to the first alphabet character for all six positions.
-    app = await buildApp({ logger: false, random: () => 0 });
+    // Inject the in-memory UrlService so this stays a fast, Docker-free unit
+    // test — without it, buildApp would default to the Prisma store and try to
+    // reach Postgres. The seam lets us pick the backend per test.
+    app = await buildApp({
+      logger: false,
+      random: () => 0,
+      urlStore: new UrlService(),
+    });
     await app.ready();
 
     const url =
@@ -32,7 +40,7 @@ describe("POST /shorten", () => {
   });
 
   it("returns a 6-character base62 code whose value flows into the short URL", async () => {
-    app = await buildApp({ logger: false });
+    app = await buildApp({ logger: false, urlStore: new UrlService() });
     await app.ready();
 
     const url = "https://dalabs.academy";
