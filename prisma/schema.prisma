@@ -1,0 +1,45 @@
+// Prisma schema for the URL shortener.
+//
+// Prisma reads this file to do two things: generate a fully typed client (the
+// `generator` block) and create SQL migrations + connect at runtime (the
+// `datasource` block). The schema is the single source of truth — the database
+// shape and the TypeScript types are both derived from it, so they can never
+// drift apart.
+//
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  // `prisma-client-js` emits the classic client into node_modules, so the rest
+  // of the code imports it as `@prisma/client`. We run `npx prisma generate`
+  // (and `prisma migrate dev` runs it for us) to (re)build it after any change.
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // PostgreSQL, pointed at the Docker instance from chapter 9. The connection
+  // string is read from the environment so the same schema targets the dev
+  // database normally and the dedicated test database under Jest — never
+  // hard-coded here, never committed.
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// A single shortened URL.
+///
+/// `id` is an internal auto-incrementing integer primary key — small, ordered,
+/// and never exposed to clients. The *public* identifier is `shortCode`, which
+/// is what appears in the short link and what we look rows up by, so it gets a
+/// unique index. That `@unique` is load-bearing: it lets the database itself
+/// reject duplicate codes, which is exactly what the collisions chapter relies
+/// on to make short-code generation safe under concurrency.
+model Url {
+  id          Int      @id @default(autoincrement())
+  shortCode   String   @unique @map("short_code")
+  originalUrl String   @map("original_url")
+  clicks      Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Map the model to a snake_case table name so the SQL stays idiomatic while
+  // the TypeScript stays camelCase.
+  @@map("urls")
+}

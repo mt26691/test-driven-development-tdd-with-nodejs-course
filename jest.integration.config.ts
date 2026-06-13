@@ -17,11 +17,17 @@ import type { Config } from "jest";
  * into the global scope. `setup-isolation.ts` uses that to register a single
  * `beforeEach` that truncates the test database before every integration test,
  * so tests can never leak state into one another.
+ *
+ * `globalSetup` runs ONCE before the whole suite (before any worker) and is the
+ * right place for one-time, cross-test preparation. We use it to apply the
+ * Prisma migrations to the test database (`prisma migrate deploy`) so the
+ * `urls` table exists before the first test runs.
  */
 const config: Config = {
   preset: "ts-jest",
   testEnvironment: "node",
   roots: ["<rootDir>/__tests__/integration"],
+  globalSetup: "<rootDir>/__tests__/integration/global-setup.ts",
   setupFiles: ["<rootDir>/__tests__/integration/setup-env.ts"],
   setupFilesAfterEnv: ["<rootDir>/__tests__/integration/setup-isolation.ts"],
   // Only files ending in .test.ts are tests. Without this, Jest's default

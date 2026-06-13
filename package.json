@@ -7,7 +7,12 @@
     "dev": "tsx watch src/server.ts",
     "test": "jest --verbose",
     "test:integration": "jest --config jest.integration.config.ts --verbose",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +20,7 @@
   "dependencies": {
     "@fastify/swagger": "^9.7.0",
     "@fastify/swagger-ui": "^5.2.5",
+    "@prisma/client": "6.19.3",
     "dotenv": "^17.4.2",
     "fastify": "^5.8.2",
     "pg": "^8.21.0"
@@ -24,6 +30,7 @@
     "@types/node": "^22.15.21",
     "@types/pg": "^8.20.0",
     "jest": "^30.0.0-beta.3",
+    "prisma": "6.19.3",
     "ts-jest": "^29.3.4",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
