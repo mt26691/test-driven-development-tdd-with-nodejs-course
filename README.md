@@ -11,77 +11,42 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 20-config-start
+git checkout 21-logging-shutdown-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 20-config-finish
+git checkout 21-logging-shutdown-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/production-readiness/configuration-and-env-validation)
+[View the lesson on dalabs.academy](<!-- dalabs:21-logging-shutdown -->)
 
 ## Running Tests
 
 ```bash
 npm install                 # installs deps and runs `prisma generate` (postinstall)
-cp .env.example .env        # local dev/test connection config
 
-# Start PostgreSQL and wait until it is healthy
-docker compose up -d --wait
-
-# Apply the migration to the DEV database (creates the `urls` table)
-npx prisma migrate deploy
-
-# Fast unit tests — no database required (stay green, Docker-free)
+# Fast unit tests — no database required
 npm test
-
-# Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup)
-npm run test:integration
-
-# When you are done, stop the database
-docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. Configuration is now centralized and
-> validated at startup.
+> **Note:** This is the **Red** phase. Two new suites describe behaviour that
+> does not exist yet:
 >
-> **One typed, validated config module.** `src/config.ts` reads the environment,
-> validates it against a TypeBox schema compiled with **Ajv** (the same validation
-> stack Fastify already uses for route schemas — no new framework, zero extra
-> top-level dependencies), applies defaults, and returns a **frozen, typed**
-> object. `loadConfig(env = process.env)` takes the environment as an argument so
-> tests can pass a fixture without ever touching the real `process.env`.
+> - `__tests__/logging.test.ts` fails to compile — it imports `src/logger`,
+>   which has not been written, and configures `buildApp` with a `nodeEnv`
+>   option that does not exist on `BuildAppOptions`.
+> - `__tests__/shutdown.test.ts` fails its assertions — `buildApp` does not yet
+>   register an `onClose` hook that runs the injected resource closers, so the
+>   spies are never called.
 >
-> **Validated variables.** `DATABASE_URL` (required, must be a URI), `PORT`
-> (integer, default `3000`), `BASE_URL` (the public base used to build `shortUrl`,
-> default `http://localhost:3000`), and `NODE_ENV` (`development` | `test` |
-> `production`, default `development`).
->
-> **Fail fast.** The server entry (`src/server.ts`) calls the config loader before
-> it starts listening. A missing or malformed variable throws a clear, multi-line
-> message naming every problem and the process exits non-zero — the service never
-> boots in a half-configured state.
->
-> **Typed access everywhere.** The `shortUrl` returned by `/shorten`, `/urls`, and
-> `/urls/:code/stats` is now built from `config.BASE_URL` instead of a hardcoded
-> `http://localhost:3000`, so it is configurable per environment. `BASE_URL`
-> defaults to `http://localhost:3000`, so every existing test stays green.
->
-> Unit suite (`npm test`, Docker-free): **14 suites / 78 tests**. Integration
-> suite (`npm run test:integration`, Docker): **10 suites / 28 tests**.
-
-## Type Checking
-
-```bash
-npm run typecheck
-```
-
-> **Note:** Type checking **passes** on this branch.
+> Everything else stays green: **2 failed, 14 passed (16 suites)** /
+> **2 failed, 78 passed (80 tests)**. Type checking also fails on this branch
+> (missing `src/logger`, unknown `nodeEnv`/`closers` options) — that is the
+> honest red we make green in the finish branch.
 
 ## Contact
 
