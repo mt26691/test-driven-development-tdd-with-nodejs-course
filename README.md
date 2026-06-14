@@ -46,6 +46,7 @@ The `main` branch contains the final, completed version of the entire course —
 | 18 | Centralized Error Handling | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/18-error-handling-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/18-error-handling-finish) |
 | 19 | Handling Collisions & Advisory Locks | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/19-collisions-and-locks-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/19-collisions-and-locks-finish) |
 | 20 | Configuration & Environment Validation | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/20-config-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/20-config-finish) |
+| 21 | Structured Logging & Graceful Shutdown | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/21-logging-shutdown-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/21-logging-shutdown-finish) |
 
 ## Contact
 
