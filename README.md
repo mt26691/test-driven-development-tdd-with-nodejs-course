@@ -49,6 +49,7 @@ The `main` branch contains the final, completed version of the entire course —
 | 21 | Structured Logging & Graceful Shutdown | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/21-logging-shutdown-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/21-logging-shutdown-finish) |
 | 22 | Advanced Test Isolation & Parallel Safety | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/22-test-isolation-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/22-test-isolation-finish) |
 | 23 | CI Pipeline with GitHub Actions | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/23-ci-pipeline-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/23-ci-pipeline-finish) |
+| 24 | Scaling with PostgreSQL Table Partitioning | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/24-table-partitioning-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/24-table-partitioning-finish) |
 
 ## Contact
 
