@@ -1,4 +1,7 @@
 import { execSync } from "node:child_process";
+import { rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { config } from "dotenv";
 
 /**
@@ -24,6 +27,11 @@ import { config } from "dotenv";
  */
 export default async function globalSetup(): Promise<void> {
   config({ quiet: true });
+
+  // Clear the on-disk barrier the parallel-safety demo uses so each run starts
+  // fresh (a stale barrier from a previous run would let the workers skip the
+  // wait and miss the race).
+  rmSync(join(tmpdir(), "url-shortener-parallel-safety"), { recursive: true, force: true });
 
   const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 

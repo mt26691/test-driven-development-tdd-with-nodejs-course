@@ -11,18 +11,18 @@ This repository contains the source code for the [Test Driven Development with N
 ## Start Branch
 
 ```bash
-git checkout 21-logging-shutdown-start
+git checkout 22-test-isolation-start
 ```
 
 ## Finish Branch
 
 ```bash
-git checkout 21-logging-shutdown-finish
+git checkout 22-test-isolation-finish
 ```
 
 ## Lesson
 
-[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/production-readiness/structured-logging-and-graceful-shutdown)
+[View the lesson on dalabs.academy](<!-- dalabs:22-test-isolation -->)
 
 ## Running Tests
 
@@ -33,41 +33,40 @@ cp .env.example .env        # local dev/test connection config
 # Start PostgreSQL and wait until it is healthy
 docker compose up -d --wait
 
-# Apply the migration to the DEV database (creates the `urls` table)
-npx prisma migrate deploy
-
 # Fast unit tests — no database required (stay green, Docker-free)
 npm test
 
-# Integration tests — apply migrations to the TEST database (automatic, via
-# Jest globalSetup)
+# Integration tests — SERIAL (one worker). Green because nothing runs in parallel.
 npm run test:integration
+
+# The same suite WITHOUT the serial guard, against the shared test database —
+# this is the failing demo: workers clobber each other's rows.
+npm run test:integration:parallel
 
 # When you are done, stop the database
 docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Green** phase. The service now has production-grade
-> observability and lifecycle handling.
+> **Note:** This is the **Red** phase for parallel safety.
 >
-> **Structured logging.** Fastify's built-in logger is **Pino**, which already
-> emits structured JSON. `src/logger.ts` derives the log **level** from
-> `NODE_ENV` — `production` → `info`, `development` → `debug`, `test` →
-> `silent` — and `buildApp` wires those options through (the bare `logger: true`
-> is gone). Fastify tags every log line with a request id (`reqId`), so all the
-> lines for one request can be correlated.
+> The integration suite shares ONE test database (`urlshortener_test`) and is
+> kept correct only by running **serially** — `jest.integration.config.ts` pins
+> `maxWorkers: 1`. `npm run test:integration` is green (10 suites / 28 tests),
+> but it leaves the extra CPU cores idle.
 >
-> **Graceful shutdown.** `buildApp` registers an `onClose` hook that awaits a
-> list of injected resource closers, isolating each so one failure cannot strand
-> the others. `src/server.ts` injects the real closers (`prisma.$disconnect()`,
-> `pool.end()`) and installs `SIGTERM`/`SIGINT` handlers that call `app.close()`
-> — which stops accepting new connections, drains in-flight requests, runs the
-> hook, then exits 0 — guarded against double-invocation. This is what lets the
-> service shut down cleanly under containers/k8s rolling deploys instead of
-> dropping requests and leaking DB connections.
+> `npm run test:integration:parallel` removes the serial guard (`maxWorkers: 4`)
+> and runs the whole suite — including two contention drivers
+> (`*.paralleltest.ts`) — against the shared database. Whenever Jest actually
+> spreads the suites across workers, they truncate and rewrite the same `urls`
+> table at once and **clobber each other's rows**: worker A's table count comes
+> back as someone else's, `collisions`/`list-urls`/`shorten-persists` all fail.
+> The run is **flaky** — it fails on roughly half of the runs and "passes" on the
+> rest only because Jest falls back to a single worker under load (serial =
+> accidentally safe). That non-determinism is exactly the problem the finish
+> branch fixes by giving every Jest worker its own database.
 >
 > Unit suite (`npm test`, Docker-free): **16 suites / 88 tests**. Integration
-> suite (`npm run test:integration`, Docker): **10 suites / 28 tests**.
+> suite, serial (`npm run test:integration`, Docker): **10 suites / 28 tests**.
 
 ## Type Checking
 
