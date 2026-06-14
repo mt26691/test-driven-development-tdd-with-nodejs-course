@@ -22,7 +22,7 @@ git checkout 24-table-partitioning-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:24-table-partitioning -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/bonus/table-partitioning)
 
 ## What's on this branch
 
