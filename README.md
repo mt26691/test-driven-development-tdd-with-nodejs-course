@@ -24,7 +24,7 @@ git checkout 23-ci-pipeline-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:23-ci-pipeline -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/testing-infrastructure/ci-pipeline-github-actions)
 
 ## What's on this branch
 
