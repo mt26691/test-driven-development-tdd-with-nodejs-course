@@ -13,9 +13,25 @@ import { PrismaUrlRepository } from "./services/prisma-url.repository";
 import { prisma } from "./db/prisma";
 import { RandomSource } from "./utils/short-code";
 import { DEFAULT_BASE_URL } from "./config";
+import { buildLoggerOptions } from "./logger";
+
+// A resource the app must release on shutdown (the Prisma client, the pg pool).
+// Returning a promise lets the onClose hook await each one.
+export type Closer = () => Promise<void> | void;
 
 interface BuildAppOptions {
+  // Set to false to silence the logger entirely (most unit tests do this).
+  // Leave undefined and the logger is configured from `nodeEnv` below.
   logger?: boolean;
+  // The environment the app runs in. Drives the Pino log level
+  // (production=info, development=debug, test=silent). Production passes the
+  // validated config.NODE_ENV; tests pass an explicit value to assert the level.
+  nodeEnv?: string;
+  // Resources to release on shutdown. The onClose hook awaits each one when the
+  // app is closed. server.ts injects the real Prisma client and pg pool; tests
+  // inject spies to prove the hook fired without touching a database. Defaults
+  // to none so the Docker-free unit tests never load the DB modules.
+  closers?: Closer[];
   // Randomness source for short code generation. Tests inject a deterministic
   // function here so the generated codes are predictable; production leaves it
   // undefined and the generator falls back to Math.random.
@@ -35,12 +51,35 @@ interface BuildAppOptions {
 export const buildApp = async (
   opts: BuildAppOptions = {}
 ): Promise<FastifyInstance> => {
-  const app = Fastify({ logger: opts.logger ?? true });
+  const nodeEnv = opts.nodeEnv ?? "development";
+  // When `logger` is explicitly false the logger is off (unit tests). Otherwise
+  // Fastify's built-in Pino logger is configured from the environment: it emits
+  // structured JSON at the level for this NODE_ENV, and Fastify tags every log
+  // line with the request id (reqId) so one request's lines can be correlated.
+  const logger = opts.logger === false ? false : buildLoggerOptions(nodeEnv);
+
+  const app = Fastify({ logger });
 
   // One centralized error handler maps custom AppError subclasses, Fastify's
   // schema-validation errors, and anything unexpected to a single { error,
   // message } envelope (see src/error-handler.ts).
   app.setErrorHandler(errorHandler);
+
+  // Graceful shutdown. Fastify's app.close() stops accepting new connections,
+  // lets in-flight requests drain, then runs onClose hooks. This hook releases
+  // whatever resources the composition root injected: server.ts passes the
+  // shared Prisma client and pg pool; tests pass spies (or nothing). Each closer
+  // is awaited and isolated so one failure cannot strand the others.
+  const closers: Closer[] = opts.closers ?? [];
+  app.addHook("onClose", async (instance) => {
+    for (const close of closers) {
+      try {
+        await close();
+      } catch (err) {
+        instance.log.error(err, "error while closing a resource on shutdown");
+      }
+    }
+  });
 
   // Pick the storage backend once and share it across every request handled by
   // this app instance. Production defaults to the Prisma-backed repository, so

@@ -52,12 +52,13 @@ describe("logger configuration", () => {
 
   it("assigns a request id to every request for log correlation", async () => {
     app = await buildApp({ nodeEnv: "test" });
-    await app.ready();
 
     let seenReqId: unknown;
     app.addHook("onRequest", async (request) => {
       seenReqId = request.id;
     });
+
+    await app.ready();
 
     const response = await app.inject({ method: "GET", url: "/health" });
 

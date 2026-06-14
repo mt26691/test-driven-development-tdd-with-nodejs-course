@@ -28,25 +28,54 @@ git checkout 21-logging-shutdown-finish
 
 ```bash
 npm install                 # installs deps and runs `prisma generate` (postinstall)
+cp .env.example .env        # local dev/test connection config
 
-# Fast unit tests — no database required
+# Start PostgreSQL and wait until it is healthy
+docker compose up -d --wait
+
+# Apply the migration to the DEV database (creates the `urls` table)
+npx prisma migrate deploy
+
+# Fast unit tests — no database required (stay green, Docker-free)
 npm test
+
+# Integration tests — apply migrations to the TEST database (automatic, via
+# Jest globalSetup)
+npm run test:integration
+
+# When you are done, stop the database
+docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Red** phase. Two new suites describe behaviour that
-> does not exist yet:
+> **Note:** This is the **Green** phase. The service now has production-grade
+> observability and lifecycle handling.
 >
-> - `__tests__/logging.test.ts` fails to compile — it imports `src/logger`,
->   which has not been written, and configures `buildApp` with a `nodeEnv`
->   option that does not exist on `BuildAppOptions`.
-> - `__tests__/shutdown.test.ts` fails its assertions — `buildApp` does not yet
->   register an `onClose` hook that runs the injected resource closers, so the
->   spies are never called.
+> **Structured logging.** Fastify's built-in logger is **Pino**, which already
+> emits structured JSON. `src/logger.ts` derives the log **level** from
+> `NODE_ENV` — `production` → `info`, `development` → `debug`, `test` →
+> `silent` — and `buildApp` wires those options through (the bare `logger: true`
+> is gone). Fastify tags every log line with a request id (`reqId`), so all the
+> lines for one request can be correlated.
 >
-> Everything else stays green: **2 failed, 14 passed (16 suites)** /
-> **2 failed, 78 passed (80 tests)**. Type checking also fails on this branch
-> (missing `src/logger`, unknown `nodeEnv`/`closers` options) — that is the
-> honest red we make green in the finish branch.
+> **Graceful shutdown.** `buildApp` registers an `onClose` hook that awaits a
+> list of injected resource closers, isolating each so one failure cannot strand
+> the others. `src/server.ts` injects the real closers (`prisma.$disconnect()`,
+> `pool.end()`) and installs `SIGTERM`/`SIGINT` handlers that call `app.close()`
+> — which stops accepting new connections, drains in-flight requests, runs the
+> hook, then exits 0 — guarded against double-invocation. This is what lets the
+> service shut down cleanly under containers/k8s rolling deploys instead of
+> dropping requests and leaking DB connections.
+>
+> Unit suite (`npm test`, Docker-free): **16 suites / 88 tests**. Integration
+> suite (`npm run test:integration`, Docker): **10 suites / 28 tests**.
+
+## Type Checking
+
+```bash
+npm run typecheck
+```
+
+> **Note:** Type checking **passes** on this branch.
 
 ## Contact
 
