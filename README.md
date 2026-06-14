@@ -22,7 +22,7 @@ git checkout 22-test-isolation-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:22-test-isolation -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/testing-infrastructure/advanced-test-isolation)
 
 ## Running Tests
 
