@@ -22,7 +22,7 @@ git checkout 21-logging-shutdown-finish
 
 ## Lesson
 
-[View the lesson on dalabs.academy](<!-- dalabs:21-logging-shutdown -->)
+[View the lesson on dalabs.academy](https://dalabs.academy/courses/test-driven-development-with-nodejs/production-readiness/structured-logging-and-graceful-shutdown)
 
 ## Running Tests
 
