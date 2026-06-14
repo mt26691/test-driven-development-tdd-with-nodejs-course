@@ -2,6 +2,8 @@
 
 This repository contains the source code for the [Test Driven Development with Node.js](https://dalabs.academy/courses/test-driven-development-with-nodejs) course.
 
+[![CI](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/actions/workflows/ci.yml/badge.svg?branch=23-ci-pipeline-finish)](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/actions/workflows/ci.yml)
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v22 or higher)
@@ -26,15 +28,15 @@ git checkout 23-ci-pipeline-finish
 
 ## What's on this branch
 
-This is the **start** (Red) state for the CI chapter. It adds a GitHub Actions
-workflow at `.github/workflows/ci.yml`, but the workflow is **incomplete on
-purpose**: it has **no PostgreSQL service container** and no `DATABASE_URL` /
-`TEST_DATABASE_URL` pointing at one. The type-check and unit steps pass (they are
-Docker-free), but the integration step has no database to connect to, so it fails
-— exactly what this workflow would do in CI.
+This is the **finish** (Green) state for the CI chapter. The GitHub Actions
+workflow at `.github/workflows/ci.yml` is now complete: it spins up a
+`postgres:16-alpine` **service container** (health-gated), points the same
+`DATABASE_URL` / `TEST_DATABASE_URL` the local setup uses at it, applies the
+Prisma migrations, creates the test database, and runs the full check suite
+(type-check + unit + integration) on every push and pull request.
 
-The finish branch adds the missing `services:` block (a `postgres:16-alpine`
-service container with a health check) and the DB env, turning the pipeline green.
+The only difference from the start branch is the missing piece that made the
+integration step fail there: the Postgres `services:` block plus the DB env.
 
 ## Running Tests Locally
 
@@ -42,29 +44,40 @@ service container with a health check) and the DB env, turning the pipeline gree
 npm install                 # installs deps and runs `prisma generate` (postinstall)
 cp .env.example .env        # local dev/test connection config
 
-# Fast unit tests — no database required (stay green, Docker-free)
-npm test
+# Start PostgreSQL and wait until it is healthy
+docker compose up -d --wait
 
-# Type checking — passes (Docker-free)
-npm run typecheck
+# The same checks CI runs:
+npm run typecheck           # type-check (Docker-free)
+npm test                    # unit tests (Docker-free)
+npm run test:integration    # integration tests (parallel, per-worker DBs)
 
-# Integration tests — REQUIRE a database. With no Postgres reachable, this fails
-# to connect, which is the failure the incomplete CI workflow hits.
-npm run test:integration
+# When you are done, stop the database
+docker compose down -v      # also delete the data volume
 ```
 
-> **Note:** This is the **Red** phase for the CI chapter.
+> **Note:** This is the **Green** phase for the CI chapter.
 >
-> The workflow `.github/workflows/ci.yml` checks out the repo, sets up Node with
-> npm caching, installs dependencies, generates the Prisma client, type-checks,
-> and runs the unit and integration tests. What it is **missing** is a database:
-> there is no `services:` container and no `DATABASE_URL` / `TEST_DATABASE_URL`,
-> so the integration job step cannot reach Postgres and fails with a connection
-> error.
+> The workflow runs one job on `ubuntu-latest`. It defines a `postgres:16-alpine`
+> **service container** with a `pg_isready` health check, so no step ever races a
+> database that is still starting. Job-level `env` sets `DATABASE_URL` and
+> `TEST_DATABASE_URL` to point at that service on `localhost:5432`, using the same
+> database names and credentials as the local docker-compose setup.
 >
-> Unit suite (`npm test`, Docker-free): **16 suites / 88 tests** — green.
-> Type check (`npm run typecheck`): green. The integration step is the one that
-> fails without a database.
+> The steps mirror the local workflow exactly: `actions/checkout`, then
+> `actions/setup-node` with **npm dependency caching**, `npm ci`,
+> `npx prisma generate`, `npx prisma migrate deploy` (dev DB), `createdb` for the
+> test database, then `npm run typecheck`, `npm test`, and `npm run test:integration`.
+> The integration suite still creates and migrates a private database per Jest
+> worker (`urlshortener_test_<id>`); the service container's `postgres` superuser
+> can `CREATE DATABASE`, so that per-worker bootstrap works unchanged in CI.
+>
+> There is no `lint` script in this project, so the workflow runs type-check and
+> tests only. If a linter were added, its step would slot in alongside the
+> type-check step.
+>
+> Unit suite (`npm test`, Docker-free): **16 suites / 88 tests**. Integration
+> suite (`npm run test:integration`, Docker, parallel): **10 suites / 28 tests**.
 
 ## Type Checking
 
@@ -73,6 +86,14 @@ npm run typecheck
 ```
 
 > **Note:** Type checking **passes** on this branch.
+
+## Gating Merges (Branch Protection)
+
+The workflow makes the suite *run* on every push and pull request. To make a
+green run *required* before code can merge, enable branch protection on GitHub:
+**Settings → Branches → Add rule** for `main`, tick **Require status checks to
+pass before merging**, and select the **Type-check & test** check. After that, a
+pull request can only merge once CI is green.
 
 ## Contact
 

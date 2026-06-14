@@ -10,11 +10,32 @@ jobs:
     name: Type-check & test
     runs-on: ubuntu-latest
 
-    # NOTE (start branch): this workflow is deliberately INCOMPLETE.
-    # There is no PostgreSQL service container and no DATABASE_URL /
-    # TEST_DATABASE_URL pointing at one, so the integration step has no
-    # database to connect to and fails. The finish branch adds the missing
-    # `services:` block and DB env. See the chapter for the fix.
+    # Connection strings for every step in the job. They point at the Postgres
+    # service container below (published on localhost:5432 on the runner) and use
+    # the same database names/credentials as the local docker-compose setup, so
+    # "works on my machine" and "works in CI" stay in lock-step.
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/urlshortener
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/urlshortener_test
+
+    # A PostgreSQL service container for the whole job. GitHub starts it before
+    # the steps run and publishes its port on the runner. The health check makes
+    # the job wait until Postgres is actually accepting connections, so no step
+    # ever races a database that is still starting up.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: urlshortener
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d urlshortener"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Check out the repository
@@ -31,6 +52,14 @@ jobs:
 
       - name: Generate the Prisma client
         run: npx prisma generate
+
+      - name: Apply migrations to the dev database
+        run: npx prisma migrate deploy
+
+      - name: Create the test database
+        run: |
+          PGPASSWORD=postgres createdb \
+            -h localhost -p 5432 -U postgres urlshortener_test
 
       - name: Type-check
         run: npm run typecheck
