@@ -48,6 +48,7 @@ The `main` branch contains the final, completed version of the entire course —
 | 20 | Configuration & Environment Validation | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/20-config-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/20-config-finish) |
 | 21 | Structured Logging & Graceful Shutdown | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/21-logging-shutdown-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/21-logging-shutdown-finish) |
 | 22 | Advanced Test Isolation & Parallel Safety | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/22-test-isolation-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/22-test-isolation-finish) |
+| 23 | CI Pipeline with GitHub Actions | — | [`start`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/23-ci-pipeline-start) · [`finish`](https://github.com/mt26691/test-driven-development-tdd-with-nodejs-course/tree/23-ci-pipeline-finish) |
 
 ## Contact
 
