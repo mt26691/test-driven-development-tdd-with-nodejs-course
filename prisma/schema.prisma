@@ -26,18 +26,26 @@ datasource db {
 
 /// A single shortened URL.
 ///
-/// `id` is an internal auto-incrementing integer primary key — small, ordered,
-/// and never exposed to clients. The *public* identifier is `shortCode`, which
-/// is what appears in the short link and what we look rows up by, so it gets a
-/// unique index. That `@unique` is load-bearing: it lets the database itself
-/// reject duplicate codes, which is exactly what the collisions chapter relies
-/// on to make short-code generation safe under concurrency.
+/// `id` is an internal auto-incrementing integer — small, ordered, and never
+/// exposed to clients. The *public* identifier is `shortCode`, which appears in
+/// the short link and is what we look rows up by, so it gets a unique index.
+///
+/// The primary key is the composite `(id, shortCode)`, not `id` alone. The
+/// underlying `urls` table is HASH-partitioned on `short_code` (see the
+/// partitioning migration), and PostgreSQL requires every unique/PK on a
+/// partitioned table to include the partition key. Prisma cannot express
+/// partitioning, so the table is built by a hand-edited raw-SQL migration; the
+/// model only needs to agree on the key shape. `shortCode` stays `@unique`, so
+/// `findByCode`, the collision retry, and every endpoint behave exactly as
+/// before — only the physical storage changed.
 model Url {
-  id          Int      @id @default(autoincrement())
+  id          Int      @default(autoincrement())
   shortCode   String   @unique @map("short_code")
   originalUrl String   @map("original_url")
   clicks      Int      @default(0)
   createdAt   DateTime @default(now()) @map("created_at")
+
+  @@id([id, shortCode])
 
   // Map the model to a snake_case table name so the SQL stays idiomatic while
   // the TypeScript stays camelCase.
