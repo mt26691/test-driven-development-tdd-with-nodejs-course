@@ -9,19 +9,17 @@ import type { Config } from "jest";
  * their own npm script (`npm run test:integration`). Keeping the two suites
  * apart means the unit tests stay runnable any time, with no Docker required.
  *
- * `setupFiles` loads environment variables from `.env` (via dotenv) before any
- * test module is imported, so the connection pool can read TEST_DATABASE_URL.
+ * `setupFiles` (`setup-env.ts`) loads `.env` and rewrites the connection strings
+ * to point this worker at its OWN database (`urlshortener_test_<id>`), before the
+ * pool or Prisma client is imported.
  *
- * `setupFilesAfterEach` is wrong — the per-test hook file is wired through
- * `setupFilesAfterEnv`, which runs after Jest installs `beforeEach`/`afterEach`
- * into the global scope. `setup-isolation.ts` uses that to register a single
- * `beforeEach` that truncates the test database before every integration test,
- * so tests can never leak state into one another.
+ * `setupFilesAfterEnv` (`setup-isolation.ts`) creates+migrates that per-worker
+ * database once, then truncates it before each test.
  *
- * `globalSetup` runs ONCE before the whole suite (before any worker) and is the
- * right place for one-time, cross-test preparation. We use it to apply the
- * Prisma migrations to the test database (`prisma migrate deploy`) so the
- * `urls` table exists before the first test runs.
+ * `maxWorkers: 4` runs the suite in PARALLEL across several workers. This is now
+ * safe — and faster — because each worker is fully isolated on its own database,
+ * so no worker can see or truncate another's rows. (The previous chapter had to
+ * pin `maxWorkers: 1` to stay correct on a single shared database.)
  */
 const config: Config = {
   preset: "ts-jest",
@@ -30,10 +28,8 @@ const config: Config = {
   globalSetup: "<rootDir>/__tests__/integration/global-setup.ts",
   setupFiles: ["<rootDir>/__tests__/integration/setup-env.ts"],
   setupFilesAfterEnv: ["<rootDir>/__tests__/integration/setup-isolation.ts"],
-  // Only files ending in .test.ts are tests. Without this, Jest's default
-  // pattern treats every .ts file under __tests__ as a test — including the
-  // setup file and the helpers, which have no test cases.
   testMatch: ["<rootDir>/__tests__/integration/**/*.test.ts"],
+  maxWorkers: 4,
 };
 
 export default config;
