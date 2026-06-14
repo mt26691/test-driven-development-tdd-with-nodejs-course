@@ -1,0 +1,42 @@
+name: CI
+
+# Run the checks on every push and on every pull request.
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Type-check & test
+    runs-on: ubuntu-latest
+
+    # NOTE (start branch): this workflow is deliberately INCOMPLETE.
+    # There is no PostgreSQL service container and no DATABASE_URL /
+    # TEST_DATABASE_URL pointing at one, so the integration step has no
+    # database to connect to and fails. The finish branch adds the missing
+    # `services:` block and DB env. See the chapter for the fix.
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate the Prisma client
+        run: npx prisma generate
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Integration tests
+        run: npm run test:integration
